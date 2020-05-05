@@ -4,11 +4,11 @@ CFLAGS = -Wall -Werror -lm -pedantic -g -std=gnu99
 all: ass3 a
 a: a
 
-ass3: utils.o errors.o game.o deck.o path.o 2310dealer.o
-	gcc $(CFLAGS) -o 2310dealer errors.o utils.o deck.o path.o  2310dealer.o game.o
+ass3: utils.o errors.o game.o participants.o deck.o path.o 2310dealer.o
+	gcc $(CFLAGS) -o 2310dealer errors.o utils.o participants.o deck.o path.o  2310dealer.o game.o
 
 a: utils.o errors.o game.o participants.o path.o player.o 2310A.o
-	gcc $(CFLAGS) -o 2310A errors.o utils.o game.o path.o player.o 2310A.o
+	gcc $(CFLAGS) -o 2310A errors.o utils.o participants.o game.o path.o player.o 2310A.o
 
 errors.o: errors.c
 	gcc $(CFLAGS) -c errors.c
