@@ -63,19 +63,21 @@ bool get_hap(char* buffer, Path* myPath, Player* p, Participant* pa) {
     }
 
     // hapMessage does not inclus "HAP" in HAPp,n,s,m,c command
-    char* hapMessage = buffer + (size - 1); 
+    char* hapMessage = buffer + (size - 1);  // buffer + 3
     char comma;
     int hapInfo[5];
 
     for (int i = 0; i < sizeof(hapInfo)/sizeof(int); i++) {
-        sscanf(hapMessage, "%d", &hapInfo[i]);
+        if (!is_digits_only(hapMessage, &hapInfo[i])) {
+            return false;
+        }
         hapMessage += count_number_digit(hapInfo[i]);
         sscanf(hapMessage, "%c", &comma);
         if (comma != ',') {
-            // printf("Invalid comma at pos: %d\n", i);
             return false;
         }
         hapMessage += sizeof(comma);
+        // at third position, check whether next char is '-' or not
         if (i == addPoint && hapMessage[0] == '-') {
             hapMessage += sizeof(char);
             negativeMoneys = true;

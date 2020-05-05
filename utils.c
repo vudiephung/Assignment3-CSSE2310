@@ -30,8 +30,8 @@ int find_max(int* array, int size) {
 }
 
 bool is_digits_only(const char* str, int* value) {
-    char tempCharacter;
-    return (sscanf(str, "%d%c", value, &tempCharacter) == 1);
+    char tempChar;
+    return (sscanf(str, "%d%c", value, &tempChar) == 1);
 }
 
 bool read_line(FILE* file, char* buffer, int* size) {
