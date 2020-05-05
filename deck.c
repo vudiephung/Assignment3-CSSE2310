@@ -14,7 +14,6 @@ void handle_deck(FILE* deckFile, Deck *myDeck) {
         next = fgetc(deckFile);
         if ((next >= 'A' && next <= 'E') || next == '\n') {
             cards[i] = (char)next;
-            //printf("%d %c\n", i, (char)next);
         } else {
             break;
         }

@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 CFLAGS = -Wall -Werror -lm -pedantic -g -std=gnu99
-=======
-CFLAGS = -Wall -Werror -pedantic -g -std=gnu99
->>>>>>> 5d7b2582604f2e4fbf681bac8dc58dc4437c3ba7
 .DEFAULT_GOAL := a
 
 all: ass3 a

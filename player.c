@@ -20,14 +20,16 @@ int next_move_a(Path* myPath, Player* p, Participant* pa) {
     bool foundMo = false;
     bool foundOthers = false;
 
+    if (sites[*currentPos + 1][SITE] == get_type_enum("Mo") &&
+            pa->sizes[*currentPos + 1] < sites[*currentPos + 1][CAPACITY]) {
+        nextMove = *currentPos + 1;
+        foundMo = true;
+    }
+
     for (int i = *currentPos + 1; i <= nearestBarrier; i++) {
         if (pa->sizes[i] < sites[i][CAPACITY]) { // check empty space
             if (sites[i][SITE] == get_type_enum("Do") && moneys[*id] > 0) {
-                nextMove = i;
                 return i;
-            } else if (!foundMo && sites[i][SITE] == get_type_enum("Mo")) {
-                nextMove = i;
-                foundMo = true;
             } else if (!foundMo && !foundOthers &&
                     sites[i][SITE] != get_type_enum("Ri")) {
                 nextMove = i;
