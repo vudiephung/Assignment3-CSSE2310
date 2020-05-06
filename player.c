@@ -26,8 +26,6 @@ int next_move_a(Path* myPath, Player* p, Participant* pa) {
         foundMo = true;
     }
 
-    fprintf(stderr, "Moneys: %d Point: %d\n", pa->moneys[*id], pa->points[*id]);
-
     for (int i = *currentPos + 1; i <= nearestBarrier; i++) {
         if (pa->sizes[i] < sites[i][CAPACITY]) { // check empty space
             if (sites[i][SITE] == get_type_enum("Do")) {
