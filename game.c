@@ -14,6 +14,14 @@
 #include "participants.h"
 #include "signal.h"
 
+bool receivedSighub = false;
+
+void sighub_handler(int s) {
+    // receivedSighub = true;
+    // waitpid(-1, NULL, WNOHANG);
+    exit(handle_error_message(COMMUNICATION));
+}
+
 void calc_next_turn(Path* myPath, Participant* pa) {
     int* numberOfSites = &myPath->numberOfSites;
     int* numberOfPlayer = &pa->numberOfPlayers;
@@ -246,16 +254,20 @@ void calc_scores(FILE* file, Participant* pa) {
     }
 }
 
-bool receivedSighub = false;
-void notice(int s) {
-    receivedSighub = true;
+void close_pipes_and_files (int id, int** pipesWrite, int** pipesRead,
+        FILE** writeFile, FILE** readFile) {
+    fclose(writeFile[id]);
+    fclose(readFile[id]);
+    close(pipesWrite[id][WRITE_END]);
+    close(pipesWrite[id][READ_END]);
+    close(pipesRead[id][WRITE_END]);
+    close(pipesRead[id][READ_END]);
 }
 
-void send_last_message(const int* numberOfPlayers, 
+void send_last_message(pid_t* childIds, int numberOfPlayers, 
         FILE** writeFile, FILE** readFile, int** pipesWrite, int** pipesRead,
         bool early) {
-    
-    for (int id = 0; id < *numberOfPlayers; id ++) {
+    for (int id = 0; id < numberOfPlayers; id ++) {
         if (early) {
             fprintf(writeFile[id], "EARLY\n");
             fflush(writeFile[id]);        
@@ -263,27 +275,49 @@ void send_last_message(const int* numberOfPlayers,
             fprintf(writeFile[id], "DONE\n");
             fflush(writeFile[id]);
         }
-
         // Close pipes and files
-        fclose(writeFile[id]);
-        fclose(readFile[id]);
-        close(pipesWrite[id][WRITE_END]);
-        close(pipesWrite[id][READ_END]);
-        close(pipesRead[id][WRITE_END]);
-        close(pipesRead[id][READ_END]);
+        close_pipes_and_files(id, pipesWrite, pipesRead, writeFile, readFile);
+    }
+
+    // reap
+    wait(0);
+
+    if (early) {
+        exit(handle_error_message(COMMUNICATION));
     }
 }
 
-void initial_game(Deck* myDeck, Path* myPath, Participant* pa, char** argv) {
+void handle_end_of_child(pid_t* childIds, int numberOfPlayers,
+        FILE** writeFile, FILE** readFile, int** pipesWrite, int** pipesRead) {
+    int status;
+    pid_t processId;
+
+    while ((processId = waitpid(-1, &status, WNOHANG)) > 0) {
+        // printf("Happended\n");
+        // if (WIFSIGNALED(status)) {
+        //     for (int id = 0; id < numberOfPlayers; id++) {
+        //         if (processId != childIds[id]) {
+        //             fprintf(writeFile[id], "EARLY");
+        //             fflush(writeFile[id]);
+        //         }
+        //         close_pipes_and_files(id, pipesWrite, pipesWrite, writeFile,
+        //                 readFile);
+        //     }
+        //     exit(handle_error_message(COMMUNICATION));
+        // }
+        exit(handle_error_message(COMMUNICATION));
+    }
+}
+
+void initial_game(Deck* myDeck, Path* myPath, Participant* pa, char** argv) {    
+    // Set up default variables
     set_up(myPath, pa);
     display_game(stdout, myPath, pa);
 
-    // SIGACTION
-    struct sigaction action;
-    memset(&action, 0, sizeof(struct sigaction));
-    action.sa_handler = notice;   
-    action.sa_flags = SA_RESTART;
-    sigaction(SIGHUP, &action, 0);
+    sleep(30);
+    if (receivedSighub) {
+        printf("Happened\n");
+    }
     
     const int* numberOfPlayers = &pa->numberOfPlayers; // 2 (int)
     char* playersCountStr = number_to_string(*numberOfPlayers); // "2" (char*)
@@ -292,6 +326,7 @@ void initial_game(Deck* myDeck, Path* myPath, Participant* pa, char** argv) {
     FILE** readFile = malloc(sizeof(FILE*) * (*numberOfPlayers));
     int** pipesRead = malloc(sizeof(int*) * (*numberOfPlayers));
     int** pipesWrite = malloc(sizeof(int*) * (*numberOfPlayers));
+    pid_t childIds[*numberOfPlayers];
 
     for (int id = 0; id < *numberOfPlayers; id++) {
         char* currentPlayer = argv[playerPosition++]; // "./2310A"
@@ -303,11 +338,11 @@ void initial_game(Deck* myDeck, Path* myPath, Participant* pa, char** argv) {
             exit(handle_error_message(STARTING_PROCESS));
         }
 
-        pid_t process = fork();
+        childIds[id] = fork(); ////
 
-        if (process == -1) {
+        if (childIds[id] == -1) {
             exit(handle_error_message(STARTING_PROCESS));
-        } else if (process == 0) { // Child
+        } else if (childIds[id] == 0) { // Child
             close(pipesWrite[id][WRITE_END]);
             close(pipesRead[id][READ_END]);
 
@@ -333,11 +368,10 @@ void initial_game(Deck* myDeck, Path* myPath, Participant* pa, char** argv) {
         } else { // Parent
             close(pipesWrite[id][READ_END]);
             close(pipesRead[id][WRITE_END]);
-
             writeFile[id] = fdopen(pipesWrite[id][WRITE_END], "w");
             readFile[id] = fdopen(pipesRead[id][READ_END], "r");
-            
-            // Read ^
+
+            // Read '^'
             fflush(stdout);
             char msg = (char)(fgetc(readFile[id]));
             fflush(stdout);
@@ -347,21 +381,15 @@ void initial_game(Deck* myDeck, Path* myPath, Participant* pa, char** argv) {
                 fprintf(writeFile[id], "%s", myPath->rawFile);
                 fflush(writeFile[id]);
             } else {
-                send_last_message(numberOfPlayers, writeFile, readFile,
-                        pipesWrite, pipesRead, true);
-                exit(handle_error_message(COMMUNICATION));
+                exit(handle_error_message(STARTING_PROCESS));
             }
         }
     }
 
     while (!is_end_game(myPath, pa)) {
-        /// !!!!!!!!!!!!!!!!
-        if (receivedSighub) {
-            send_last_message(numberOfPlayers, writeFile, readFile,
-            pipesWrite, pipesRead, receivedSighub);
-            while ((wait(NULL)) >- 1);
-        }
-
+        // sleep(10);
+        // handle_end_of_child(childIds, *numberOfPlayers, writeFile, readFile,
+        //     pipesWrite, pipesRead);
         calc_next_turn(myPath, pa);
 
         // YT
@@ -378,7 +406,7 @@ void initial_game(Deck* myDeck, Path* myPath, Participant* pa, char** argv) {
         if (firstLetter != 'D' || secondLetter != 'O' ||
                 pa->nextMove[pa->nextTurn] > myPath->numberOfSites ||
                 newLine != '\n') { // Comms error
-            send_last_message(numberOfPlayers, writeFile, readFile,
+            send_last_message(childIds, *numberOfPlayers, writeFile, readFile,
                     pipesWrite, pipesRead, true);
         }
         // Handle Move
@@ -392,11 +420,11 @@ void initial_game(Deck* myDeck, Path* myPath, Participant* pa, char** argv) {
             (pa->moneyChange)[pa->nextTurn], (pa->cards)[pa->nextTurn][0]); // change 0
             fflush(writeFile[id]);     
         }
-
     }
 
-    send_last_message(numberOfPlayers, writeFile, readFile, pipesWrite,
-            pipesRead, receivedSighub);
+    // End game, send "DONE"
+    send_last_message(childIds, *numberOfPlayers, writeFile, readFile,
+            pipesWrite, pipesRead, false);
 
     calc_scores(stdout, pa);
 
