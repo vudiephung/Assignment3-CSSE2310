@@ -1,5 +1,5 @@
 CFLAGS = -Wall -Werror -lm -pedantic -g -std=gnu99
-.DEFAULT_GOAL := all
+.DEFAULT_GOAL := a
 
 all: ass3 a
 a: a
