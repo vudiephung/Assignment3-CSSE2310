@@ -381,7 +381,6 @@ void initial_game(Deck* myDeck, Path* myPath, Participant* pa, char** argv) {
             send_last_message(numberOfPlayers, writeFile, readFile,
                     pipesWrite, pipesRead, true);
         }
-
         // Handle Move
         handle_move(stdout, myPath, pa,
                 pa->nextTurn, (pa->nextMove)[pa->nextTurn]);
@@ -393,6 +392,7 @@ void initial_game(Deck* myDeck, Path* myPath, Participant* pa, char** argv) {
             (pa->moneyChange)[pa->nextTurn], (pa->cards)[pa->nextTurn][0]); // change 0
             fflush(writeFile[id]);     
         }
+
     }
 
     send_last_message(numberOfPlayers, writeFile, readFile, pipesWrite,

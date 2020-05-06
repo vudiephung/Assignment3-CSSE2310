@@ -26,10 +26,16 @@ int next_move_a(Path* myPath, Player* p, Participant* pa) {
         foundMo = true;
     }
 
+    fprintf(stderr, "Moneys: %d Point: %d\n", pa->moneys[*id], pa->points[*id]);
+
     for (int i = *currentPos + 1; i <= nearestBarrier; i++) {
         if (pa->sizes[i] < sites[i][CAPACITY]) { // check empty space
-            if (sites[i][SITE] == get_type_enum("Do") && moneys[*id] > 0) {
-                return i;
+            if (sites[i][SITE] == get_type_enum("Do")) {
+                if ((moneys[*id] > 0)) {
+                    return i;
+                } else {
+                    continue;
+                }
             } else if (!foundMo && !foundOthers &&
                     sites[i][SITE] != get_type_enum("Ri")) {
                 nextMove = i;
@@ -68,7 +74,7 @@ bool get_hap(char* buffer, Path* myPath, Player* p, Participant* pa) {
     int hapInfo[5];
 
     for (int i = 0; i < sizeof(hapInfo)/sizeof(int); i++) {
-        if (!is_digits_only(hapMessage, &hapInfo[i])) {
+        if (sscanf(hapMessage, "%d", &hapInfo[i]) != 1) {
             return false;
         }
         hapMessage += count_number_digit(hapInfo[i]);
@@ -95,7 +101,6 @@ bool get_hap(char* buffer, Path* myPath, Player* p, Participant* pa) {
     pa->points[id] += hapInfo[addPoint];
 
     handle_move(stderr, myPath, pa, id, hapInfo[newPosition]);
-    // printf("Moneys: %d Point: %d\n", pa->moneys, pa->points[id]);
     return true;
 }
 
