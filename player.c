@@ -29,7 +29,7 @@ int most_cards_owner (Path* myPath, Player* p, Participant* pa) {
     return owner;
 }
 
-// Strategy
+// Strategy B
 int next_move_b(Path* myPath, Player* p, Participant* pa) {
     int** sites = myPath->sites;
     int** positions = pa->positions;
@@ -45,6 +45,11 @@ int next_move_b(Path* myPath, Player* p, Participant* pa) {
     bool foundRi = false;
     bool foundV2 = false;
     bool foundOthers = false;
+
+    // next site is barrier
+    if (sites[currentPos + 1][SITE] == get_type_enum("::")) {
+        return currentPos + 1;
+    }
 
     // next site is empty
     if (pa->sizes[currentPos + 1] < sites[currentPos + 1][CAPACITY]) {
@@ -86,6 +91,7 @@ int next_move_b(Path* myPath, Player* p, Participant* pa) {
     return nextMove;
 }
 
+// Strategy A
 int next_move_a(Path* myPath, Player* p, Participant* pa) {
     int** sites = myPath->sites;
     const int* id = &p->playerId;

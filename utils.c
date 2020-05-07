@@ -23,10 +23,20 @@ int find_max(int* array, int size) {
     int max = array[0];
     for (int i = 1; i < size; i++) {
         if (array[i] > max) {
-            max  = array[ i ];
+            max  = array[i];
         }
     }
     return max;
+}
+
+int find_min(int* array, int size) {
+    int min = array[0];
+    for (int i = 1; i < size; i++) {
+        if (array[i] < min) {
+            min  = array[i];
+        }
+    }
+    return min;
 }
 
 bool is_digits_only(const char* str, int* value) {

@@ -25,4 +25,6 @@ void handle_deck(FILE* deckFile, Deck *myDeck);
 
 bool is_valid_deck_file(char* deck, Deck* myDeck);
 
+char get_next_card(Deck* myDeck);
+
 #endif

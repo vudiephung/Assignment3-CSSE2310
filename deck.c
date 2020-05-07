@@ -54,3 +54,13 @@ bool is_valid_deck_file(char* deck, Deck* myDeck) {
     fclose(deckFile);
     return myDeck->valid;
 }
+
+char get_next_card(Deck* myDeck) {
+    static int currentPos = 0;
+    int numberOfCards = myDeck->numberOfCards;
+    char* cards = myDeck->cards;
+    if (currentPos == numberOfCards) {
+        currentPos = 0;
+    }
+    return cards[currentPos++];
+}

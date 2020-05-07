@@ -12,6 +12,7 @@
 #include "errors.h"
 #include "path.h"
 #include "participants.h"
+#include "deck.h"
 // #include "signal.h"
 
 // bool receivedSighub = false;
@@ -38,17 +39,6 @@ void calc_next_turn(Path* myPath, Participant* pa) {
             }
         }
     }
-}
-
-char get_next_card(Deck* myDeck, Participant* pa) {
-    static int currentPos = 0;
-    int numberOfCards = myDeck->numberOfCards;
-    char* cards = myDeck->cards;
-    if (currentPos == numberOfCards - 1) {
-        currentPos = 0;
-    }
-    printf("CurrentPOS 384: %d\n", currentPos);
-    return cards[currentPos++];
 }
 
 void set_up(Path* myPath, Participant* pa) {
@@ -139,7 +129,7 @@ void handle_move(FILE* file, Deck* myDeck, Path* myPath, Participant* pa,
             pa->points[playerId] += pa->pointChange[playerId];
             *playerMoney = 0;
         } else if (nextSite == DRAW_NEXT_CARD) {
-            char card = get_next_card(myDeck, pa);
+            char card = get_next_card(myDeck);
             pa->cards[playerId][get_card_enum(card) - 1]++; 
         }
     }
@@ -254,11 +244,40 @@ bool is_end_game(Path* myPath, Participant* pa) {
 }
 
 void calc_scores(FILE* file, Participant* pa) {
+    int** cards = pa->cards;
     int* points = pa->points;
     int* numberOfPlayers = &pa->numberOfPlayers;
     fprintf(file, "Scores: ");
     for (int id = 0; id < *numberOfPlayers; id++) {
+        // Add V1,V2 scores
         pa->points[id] += (pa->v1[id] + pa->v2[id]);
+        // Add scores by collecting cards
+        int totalCards = 0;
+        bool fullSet = true; // True iff at least a set of {A,B,C,D,E}
+        for (int i = 0; i < NUM_A_TO_E; i++) {
+            totalCards += cards[id][i];
+            if (cards[id][i] == 0) {
+                fullSet = false;
+            }
+        }
+        // ABCDE: +10 points
+        if (fullSet) {
+            int minCard = find_min(cards[id], NUM_A_TO_E);
+            pa->points[id] += 10 * minCard;
+            totalCards -= minCard;
+        }
+        // Set of 4: +7 points
+        int maxPointsOfASet = 7;
+        int maxSet = 4;
+        while (totalCards > 0) {
+            if (totalCards >= maxSet) {
+                pa->points[id] += maxPointsOfASet * (totalCards / maxSet);
+            }
+            totalCards = totalCards % maxSet;
+            maxSet--;
+            maxPointsOfASet -= 2;
+        }
+        // Print Scores:
         fprintf(file, "%d", points[id]);
         if (id != *numberOfPlayers - 1) {
             fprintf(file, ",");
