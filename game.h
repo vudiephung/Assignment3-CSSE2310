@@ -24,6 +24,21 @@ bool is_end_game(Path* myPath, Participant* pa);
 
 void calc_scores(FILE* file, Participant* pa);
 
-void initial_game(Deck* myDeck, Path* myPath, Participant* p, char** argv);
+void close_pipes_and_files (int id, int** pipesWrite, int** pipesRead,
+        FILE** writeFile, FILE** readFile);
+
+void send_last_message(pid_t* childIds, int numberOfPlayers, 
+        FILE** writeFile, FILE** readFile, int** pipesWrite, int** pipesRead,
+        bool early);
+
+void initial_game(int numberOfPlayers, FILE** writeFile, FILE** readFile,
+        int** pipesWrite, int** pipesRead, pid_t* childIds, char* rawFile,
+        char** argv);
+
+void communicate(Path* myPath, Participant* pa, pid_t* childIds,
+        FILE** writeFile, FILE** readFile,
+        int** pipesWrite, int** pipesRead);
+
+void run_game(Deck* myDeck, Path* myPath, Participant* pa, char** argv);
 
 #endif

@@ -107,6 +107,7 @@ void handle_input(Path* myPath, Player* p, Participant* pa) {
     char* buffer = malloc(sizeof(char) * defaultBufferSize);
 
     display_game(stderr, myPath, pa);
+
     while (true) {
         if (read_line(stdin, buffer, &defaultBufferSize)) {
             if (!strcmp(buffer, "YT")) {
@@ -139,7 +140,6 @@ void handle_input(Path* myPath, Player* p, Participant* pa) {
 
 // Handle Path
 bool get_path(Path* myPath, Player* p, Participant* pa) {
-    // FILE* test = fopen("test", "w");
     printf("^");
     fflush(stdout);
 
@@ -147,9 +147,6 @@ bool get_path(Path* myPath, Player* p, Participant* pa) {
 
     if (myPath->valid) {
         set_up(myPath, pa);
-        // display_game(myPath);
-    } else {
-        // printf("Invlaid path\n");
     }
 
     return myPath->valid;
