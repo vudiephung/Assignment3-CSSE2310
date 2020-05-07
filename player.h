@@ -13,6 +13,7 @@ typedef struct {
 //         const int toPosition) {
 int next_move_a(Path* myPath, Player* p, Participant* pa);
 bool get_path(Path* myPath, Player* p, Participant* pa);
-void handle_input(Path* myPath, Player* p, Participant* pa);
+void handle_input(Path* myPath, Player* p, Participant* pa,
+        char playerType);
 
 #endif

@@ -34,7 +34,7 @@ int main (int argc, char** argv) {
         return handle_player_errors(PATH_PLAYER);
     }
 
-    handle_input(myPath, p, pa);
+    handle_input(myPath, p, pa, 'A');
 
     free(myPath);
     free(p);

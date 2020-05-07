@@ -2,15 +2,16 @@
 #define PARTICIPANTS_H
 
 #define NUM_A_TO_E 5
-// #define A 0
-// #define B 1
-// #define C 2
-// #define D 3
-// #define E 4
+// #define A 1
+// #define B 2
+// #define C 3
+// #define D 4
+// #define E 5
 
 typedef struct participant {
     int numberOfPlayers;
     int nextTurn;
+    int nextCard;
     int** positions;
     int* sizes; // 0 <= size <= CAPACITY of each site
     int* moneys;

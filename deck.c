@@ -1,6 +1,25 @@
 #include "deck.h"
 #include "stdlib.h"
 
+CardType get_card_enum(const char card) {                                                                       
+    if (card == 'A') {
+        return A;
+    }
+    if (card == 'B') {
+        return B;
+    }
+    if (card == 'C') {
+        return C;
+    }
+    if (card == 'D') {
+        return D;
+    }
+    if (card == 'E') {
+        return E;
+    }
+    return ERROR_CARD;
+}
+
 void handle_deck(FILE* deckFile, Deck *myDeck) {
     int next = 0;
     int numberOfCards;

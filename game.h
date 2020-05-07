@@ -9,8 +9,8 @@
 
 void set_up(Path* myPath, Participant* p);
 
-void handle_move(FILE* file,Path* myPath, Participant* p, int playerId,
-        const int toPosition);
+void handle_move(FILE* file, Deck* myDeck, Path* myPath, Participant* p,
+        int playerId, const int toPosition);
 
 void display_sites(FILE* file, Path* myPath);
 
@@ -35,7 +35,7 @@ void initial_game(int numberOfPlayers, FILE** writeFile, FILE** readFile,
         int** pipesWrite, int** pipesRead, pid_t* childIds, char* rawFile,
         char** argv);
 
-void communicate(Path* myPath, Participant* pa, pid_t* childIds,
+void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
         FILE** writeFile, FILE** readFile,
         int** pipesWrite, int** pipesRead);
 

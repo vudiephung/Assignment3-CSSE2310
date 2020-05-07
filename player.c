@@ -7,8 +7,85 @@
 #include "participants.h"
 #include "game.h"
 
+int most_cards_owner (Path* myPath, Player* p, Participant* pa) {
+    int numberOfPlayers = pa->numberOfPlayers;
+    int** cards = pa->cards;
+    // int** sites = myPath->sites;
+    int owner;
+
+    int* cardsCollected = malloc(sizeof(int) * numberOfPlayers);
+
+    for (int id = 0; id < numberOfPlayers; id++) {
+        cardsCollected[id] = 0;
+        for (int j = 0; j < NUM_A_TO_E; j++) {
+            if (cards[id][j] > 0) {
+                cardsCollected[id]++;
+            }
+        }
+    }
+
+    owner = find_max(cardsCollected, numberOfPlayers);
+
+    return owner;
+}
 
 // Strategy
+int next_move_b(Path* myPath, Player* p, Participant* pa) {
+    int** sites = myPath->sites;
+    int** positions = pa->positions;
+    const int* moneys = pa->moneys;
+    int id = p->playerId;
+    int currentPos = pa->positions[id][1];
+    const int nearestBarrier = nearest_barrier(myPath, &currentPos);
+    int numberOfPlayersr = pa->numberOfPlayers;
+    int nextMove;
+    bool laterSite = true;
+
+    int mostCardsOwner = most_cards_owner(myPath, p, pa);
+    bool foundRi = false;
+    bool foundV2 = false;
+    bool foundOthers = false;
+
+    // next site is empty
+    if (pa->sizes[currentPos + 1] < sites[currentPos + 1][CAPACITY]) {
+        // all of others players are on the later sites
+        for (int i = 0; i < numberOfPlayersr && i!= id; i++) {
+            if (positions[i][1] <= currentPos) {
+                laterSite = false;
+                break;
+            }
+        }
+        if (laterSite == true) {
+            return currentPos + 1;
+        }
+    }
+
+    // other cases
+    for (int i = currentPos + 2; i <= nearestBarrier; i++) {
+        if (pa->sizes[i] < sites[i][CAPACITY]) {
+            if (sites[i][SITE] == get_type_enum("Mo") &&
+                    (moneys[id] % 2) != 0) {
+                return i;
+            }
+
+            if (!foundRi && sites[i][SITE] == get_type_enum("Ri") &&
+                    mostCardsOwner == id) {
+                foundRi =true;
+                nextMove = i;
+            } else if (!foundRi && !foundV2 &&
+                    sites[i][SITE] == get_type_enum("V2")) {
+                foundV2 = true;
+                nextMove = i;
+            } else if (!foundRi && !foundV2 && !foundOthers) {
+                foundOthers = true;
+                nextMove = i;
+            }
+        }
+    }
+
+    return nextMove;
+}
+
 int next_move_a(Path* myPath, Player* p, Participant* pa) {
     int** sites = myPath->sites;
     const int* id = &p->playerId;
@@ -98,11 +175,12 @@ bool get_hap(char* buffer, Path* myPath, Player* p, Participant* pa) {
             hapInfo[moneyChange];
     pa->points[id] += hapInfo[addPoint];
 
-    handle_move(stderr, myPath, pa, id, hapInfo[newPosition]);
+    handle_move(stderr, NULL, myPath, pa, id, hapInfo[newPosition]);
     return true;
 }
 
-void handle_input(Path* myPath, Player* p, Participant* pa) {
+void handle_input(Path* myPath, Player* p, Participant* pa,
+        char playerType) {
     int defaultBufferSize = 20;
     char* buffer = malloc(sizeof(char) * defaultBufferSize);
 
@@ -115,7 +193,8 @@ void handle_input(Path* myPath, Player* p, Participant* pa) {
                 if (is_end_game(myPath, pa)) {
                     exit(handle_error_message(COMMUNICATION_PLAYER));
                 }
-                int nextMove = next_move_a(myPath, p, pa);
+                int nextMove = playerType == 'A' ? next_move_a(myPath, p, pa):
+                        next_move_b(myPath, p, pa);
                 printf("DO%d\n", nextMove);
                 fflush(stdout);
             } else if (!strcmp(buffer, "EARLY")) {

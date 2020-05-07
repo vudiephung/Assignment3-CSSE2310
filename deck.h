@@ -10,7 +10,16 @@ typedef struct DeckFile {
     bool valid;
 } Deck;
 
-// get_type_enum(const char* site);
+typedef enum Cards{
+    A = 1,
+    B = 2,
+    C = 3,
+    D = 4,
+    E = 5,
+    ERROR_CARD = 6
+} CardType;
+
+CardType get_card_enum(const char card);
 
 void handle_deck(FILE* deckFile, Deck *myDeck);
 

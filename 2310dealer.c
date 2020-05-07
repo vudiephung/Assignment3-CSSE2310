@@ -9,25 +9,25 @@
 #include <string.h>
 #include <stdlib.h>
 
-// bool receivedSighub = false;
+bool receivedSighub = false;
 
-// void sighub_handler(int s) {
-//     receivedSighub = true;
-//     kill(-1, SIGKILL);
-//     waitpid(-1, NULL, WNOHANG);
-//     exit(handle_error_message(COMMUNICATION));
-// }
+void sighub_handler(int s) {
+    receivedSighub = true;
+    // kill(-1 * (getpid()), SIGKILL);
+    waitpid(-1, NULL, WNOHANG);
+    exit(handle_error_message(COMMUNICATION));
+}
 
 void clean_up(void) { //
     return;
 }
 
 int main(int argc, char** argv){
-    // struct sigaction sa;
-    // memset(&sa, 0, sizeof(struct sigaction));
-    // sa.sa_handler = sighub_handler;
-    // sa.sa_flags = SA_RESTART;
-    // sigaction(SIGHUP, &sa, 0);
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(struct sigaction));
+    sa.sa_handler = sighub_handler;
+    sa.sa_flags = SA_RESTART;
+    sigaction(SIGHUP, &sa, 0);
 
     if (argc < 4) {
         return handle_error_message(NUMS_OF_ARGS_DEALER);
