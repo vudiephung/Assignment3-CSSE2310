@@ -115,14 +115,18 @@ void handle_move(FILE* file, Deck* myDeck, Path* myPath, Participant* pa,
     int* playerMoney = &(pa->moneys)[playerId];
     int nextSite = sites[toPosition][SITE];
 
-    // printf("To: %d\n", toPosition);
     if (!is_valid_move(myPath, pa, playerId, toPosition)) {
         return;
     }
 
+    pa->nextCard = 0;
+    pa->pointChange[playerId] = 0;
+    pa->moneyChange[playerId] = 0;
+
     if (file == stdout) { // dealer
         if (nextSite == MONEY) {
             *playerMoney += 3;
+            pa->moneyChange[playerId] = 3;
         } else if (nextSite == MONEY_2_POINT) {
             pa->pointChange[playerId] = (int)floor(*playerMoney / 2);
             pa->moneyChange[playerId] = -(*playerMoney);
@@ -130,7 +134,8 @@ void handle_move(FILE* file, Deck* myDeck, Path* myPath, Participant* pa,
             *playerMoney = 0;
         } else if (nextSite == DRAW_NEXT_CARD) {
             char card = get_next_card(myDeck);
-            pa->cards[playerId][get_card_enum(card) - 1]++; 
+            pa->nextCard = get_card_enum(card);
+            pa->cards[playerId][pa->nextCard - 1]++; 
         }
     }
 
@@ -140,8 +145,6 @@ void handle_move(FILE* file, Deck* myDeck, Path* myPath, Participant* pa,
             break;
         case V2:
             (pa->v2)[playerId] += 1;
-            break;
-        case DRAW_NEXT_CARD:
             break;
         default:
             break;
@@ -173,7 +176,7 @@ void display_player_position(FILE* file, Path* myPath, Participant* pa) {
     int* numberOfPlayers = &pa->numberOfPlayers;
     int** positions = pa->positions;
 
-    int largestSize = find_max(pa->sizes, *numberOfSites);
+    int largestSize = find_max(pa->sizes, *numberOfSites, NULL);
     for (int id = 0; id < largestSize; id++) {
         for (int site = 0; site < *numberOfSites; site++) {
             bool found = false;
@@ -252,30 +255,18 @@ void calc_scores(FILE* file, Participant* pa) {
         // Add V1,V2 scores
         pa->points[id] += (pa->v1[id] + pa->v2[id]);
         // Add scores by collecting cards
-        int totalCards = 0;
-        bool fullSet = true; // True iff at least a set of {A,B,C,D,E}
+        int maxPointsOfASet = 10;
+        bubble_sort(cards[id], NUM_A_TO_E);
         for (int i = 0; i < NUM_A_TO_E; i++) {
-            totalCards += cards[id][i];
-            if (cards[id][i] == 0) {
-                fullSet = false;
+            int pointsChange;
+            if (i == 0) {
+                pointsChange = cards[id][i] * maxPointsOfASet;
+                maxPointsOfASet -= 3;
+            } else {
+                pointsChange = (cards[id][i] - cards[id][i - 1]) * maxPointsOfASet;
+                maxPointsOfASet -= 2;
             }
-        }
-        // ABCDE: +10 points
-        if (fullSet) {
-            int minCard = find_min(cards[id], NUM_A_TO_E);
-            pa->points[id] += 10 * minCard;
-            totalCards -= minCard;
-        }
-        // Set of 4: +7 points
-        int maxPointsOfASet = 7;
-        int maxSet = 4;
-        while (totalCards > 0) {
-            if (totalCards >= maxSet) {
-                pa->points[id] += maxPointsOfASet * (totalCards / maxSet);
-            }
-            totalCards = totalCards % maxSet;
-            maxSet--;
-            maxPointsOfASet -= 2;
+            pa->points[id] += pointsChange;
         }
         // Print Scores:
         fprintf(file, "%d", points[id]);
@@ -316,28 +307,6 @@ void send_last_message(pid_t* childIds, int numberOfPlayers,
     wait(0);
 
     if (early) {
-        exit(handle_error_message(COMMUNICATION));
-    }
-}
-
-void handle_end_of_child(pid_t* childIds, int numberOfPlayers,
-        FILE** writeFile, FILE** readFile, int** pipesWrite, int** pipesRead) {
-    int status;
-    pid_t processId;
-
-    while ((processId = waitpid(-1, &status, WNOHANG)) > 0) {
-        // printf("Happended\n");
-        // if (WIFSIGNALED(status)) {
-        //     for (int id = 0; id < numberOfPlayers; id++) {
-        //         if (processId != childIds[id]) {
-        //             fprintf(writeFile[id], "EARLY");
-        //             fflush(writeFile[id]);
-        //         }
-        //         close_pipes_and_files(id, pipesWrite, pipesWrite, writeFile,
-        //                 readFile);
-        //     }
-        //     exit(handle_error_message(COMMUNICATION));
-        // }
         exit(handle_error_message(COMMUNICATION));
     }
 }
@@ -411,50 +380,54 @@ void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
         FILE** writeFile, FILE** readFile,
         int** pipesWrite, int** pipesRead) {
     int numberOfPlayers = pa->numberOfPlayers;
-    // sleep(1000);
+
     while (!is_end_game(myPath, pa)) {
-    // if (receivedSighub) {
-    //     // printf("Killed\n");
-    //     // for (int i = 0; i < *numberOfPlayers; i++) {
-    //     //     kill(childIds[i], SIGHUP);
-    //     // }
-    //     // wait(0);
-    //     // waitpid(-1, NULL, 0);
-    //     // break;
-    //     exit(handle_error_message(COMMUNICATION));
-    // }
-    // sleep(5);
-    calc_next_turn(myPath, pa);
+        // if (receivedSighub) {
+        //     // printf("Killed\n");
+        //     // for (int i = 0; i < *numberOfPlayers; i++) {
+        //     //     kill(childIds[i], SIGHUP);
+        //     // }
+        //     // wait(0);
+        //     // waitpid(-1, NULL, 0);
+        //     // break;
+        //     exit(handle_error_message(COMMUNICATION));
+        // }
+        // sleep(5);
+        calc_next_turn(myPath, pa);
 
-    // YT
-    fprintf(writeFile[pa->nextTurn], "YT\n");
-    fflush(writeFile[pa->nextTurn]);
+        // YT
+        fprintf(writeFile[pa->nextTurn], "YT\n");
+        fflush(writeFile[pa->nextTurn]);
 
-    // Get next move
-    char firstLetter;
-    char secondLetter;
-    char newLine;
-    fscanf(readFile[pa->nextTurn], "%c%c%d%c", &firstLetter, &secondLetter,
-        &(pa->nextMove)[pa->nextTurn], &newLine);
-    // check whether message follows formar "DO" + site + '\n or not
-    if (firstLetter != 'D' || secondLetter != 'O' ||
-            pa->nextMove[pa->nextTurn] > myPath->numberOfSites ||
-            newLine != '\n') { // Comms error
-        send_last_message(childIds, numberOfPlayers, writeFile, readFile,
-                pipesWrite, pipesRead, true);
+        // Get next move
+        char firstLetter;
+        char secondLetter;
+        char newLine;
+        fscanf(readFile[pa->nextTurn], "%c%c%d%c", &firstLetter, &secondLetter,
+            &(pa->nextMove)[pa->nextTurn], &newLine);
+        // check whether message follows formar "DO" + site + '\n or not
+        if (firstLetter != 'D' || secondLetter != 'O' ||
+                pa->nextMove[pa->nextTurn] > myPath->numberOfSites ||
+                newLine != '\n') { // Comms error
+            send_last_message(childIds, numberOfPlayers, writeFile, readFile,
+                    pipesWrite, pipesRead, true);
+        }
+        // Handle Move
+        handle_move(stdout, myDeck, myPath, pa,
+                pa->nextTurn, (pa->nextMove)[pa->nextTurn]);
+
+        for (int id = 0; id < numberOfPlayers; id++) {
+            // FILE* testdealer = fopen("testdealer", "w");
+            // fprintf(testdealer, "HAP%d,%d,%d,%d,%d\n", (pa->nextTurn),
+            // (pa->nextMove)[pa->nextTurn], (pa->pointChange)[pa->nextTurn],
+            // (pa->moneyChange)[pa->nextTurn], pa->nextCard);
+            // Send HAP
+            fprintf(writeFile[id], "HAP%d,%d,%d,%d,%d\n", (pa->nextTurn),
+            (pa->nextMove)[pa->nextTurn], (pa->pointChange)[pa->nextTurn],
+            (pa->moneyChange)[pa->nextTurn], pa->nextCard);
+            fflush(writeFile[id]);
+        }
     }
-    // Handle Move
-    handle_move(stdout, myDeck, myPath, pa,
-            pa->nextTurn, (pa->nextMove)[pa->nextTurn]);
-
-    for (int id = 0; id < numberOfPlayers; id++) {
-        // Send HAP
-        fprintf(writeFile[id], "HAP%d,%d,%d,%d,%d\n", (pa->nextTurn),
-        (pa->nextMove)[pa->nextTurn], (pa->pointChange)[pa->nextTurn],
-        (pa->moneyChange)[pa->nextTurn], (pa->cards)[pa->nextTurn][0]);
-        fflush(writeFile[id]);     
-    }
-}
 }
 
 void run_game(Deck* myDeck, Path* myPath, Participant* pa, char** argv) {    

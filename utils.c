@@ -19,25 +19,38 @@ int count_number_digit(int num) {
     return count;
 }
 
-int find_max(int* array, int size) {
+int find_max(int* array, int size, int* index) {
     int max = array[0];
+    if (index != NULL) {
+        *index = 0;
+    }
     for (int i = 1; i < size; i++) {
         if (array[i] > max) {
             max  = array[i];
+            if (index != NULL) {
+                *index = i;
+            }
         }
     }
     return max;
 }
 
-int find_min(int* array, int size) {
-    int min = array[0];
-    for (int i = 1; i < size; i++) {
-        if (array[i] < min) {
-            min  = array[i];
+void swap(int *a, int *b) { 
+    int temp = *a; 
+    *a = *b; 
+    *b = temp; 
+} 
+  
+// A function to implement bubble sort 
+void bubble_sort(int* array, int size) { 
+   int i, j; 
+   for (i = 0; i < size - 1; i++) {
+        for (j = 0; j < size - i - 1; j++) {
+            if (array[j] > array[j + 1]) 
+            swap(&array[j], &array[j + 1]); 
         }
-    }
-    return min;
-}
+   }
+} 
 
 bool is_digits_only(const char* str, int* value) {
     char tempChar;

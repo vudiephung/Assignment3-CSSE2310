@@ -13,9 +13,9 @@ bool receivedSighub = false;
 
 void sighub_handler(int s) {
     receivedSighub = true;
-    // kill(-1 * (getpid()), SIGKILL);
-    waitpid(-1, NULL, WNOHANG);
-    exit(handle_error_message(COMMUNICATION));
+    kill(-1 * (getpid()), SIGKILL);
+    // waitpid(-1, NULL, WNOHANG);
+    // exit(handle_error_message(COMMUNICATION));
 }
 
 void clean_up(void) { //
