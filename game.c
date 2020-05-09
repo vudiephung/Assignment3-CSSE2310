@@ -13,16 +13,12 @@
 #include "path.h"
 #include "participants.h"
 #include "deck.h"
-// #include "signal.h"
 
-// bool receivedSighub = false;
+bool endOfChild = false;
 
-// void sighub_handler(int s) {
-//     receivedSighub = true;
-//     // kill(-1, SIGKILL);
-//     // waitpid(-1, NULL, WNOHANG);
-//     // exit(handle_error_message(COMMUNICATION));
-// }
+void sigchild_handler(int s) {
+    endOfChild = true;
+}
 
 void calc_next_turn(Path* myPath, Participant* pa) {
     int* numberOfSites = &myPath->numberOfSites;
@@ -233,7 +229,6 @@ void display_dealer_output(FILE* file, Path* myPath, Participant* pa) {
 void display_game(FILE* file, Path* myPath, Participant* pa) {
     display_sites(file, myPath);
     display_player_position(file, myPath, pa);
-    // display_dealer_output(myPath, pa);
 }
 
 bool is_end_game(Path* myPath, Participant* pa) {
@@ -304,7 +299,7 @@ void send_last_message(pid_t* childIds, int numberOfPlayers,
     }
 
     // reap
-    wait(0);
+    wait(NULL);
 
     if (early) {
         exit(handle_error_message(COMMUNICATION));
@@ -376,52 +371,60 @@ void initial_game(int numberOfPlayers, FILE** writeFile, FILE** readFile,
     free(playersCountStr);
 }
 
+void handle_end_of_child (pid_t* childIds, FILE** writeFile,
+        int numberOfPlayers) {
+    pid_t pid;
+    while (pid = waitpid(-1, 0, WNOHANG), pid > 0) {
+        for (int i = 0; i < numberOfPlayers; i++) {
+            if (childIds[i] == pid) {
+                childIds[i] = EMPTY_VALUE;
+            }
+        }
+    }
+    for (int id = 0; id < numberOfPlayers; id++) {
+        if (childIds[id] != -1) {
+            fprintf(writeFile[id], "EARLY\n");
+        }
+    }
+    exit(handle_error_message(COMMUNICATION));
+}
+
 void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
         FILE** writeFile, FILE** readFile,
         int** pipesWrite, int** pipesRead) {
     int numberOfPlayers = pa->numberOfPlayers;
 
     while (!is_end_game(myPath, pa)) {
-        // if (receivedSighub) {
-        //     // printf("Killed\n");
-        //     // for (int i = 0; i < *numberOfPlayers; i++) {
-        //     //     kill(childIds[i], SIGHUP);
-        //     // }
-        //     // wait(0);
-        //     // waitpid(-1, NULL, 0);
-        //     // break;
-        //     exit(handle_error_message(COMMUNICATION));
-        // }
-        // sleep(5);
-        calc_next_turn(myPath, pa);
-
-        // YT
-        fprintf(writeFile[pa->nextTurn], "YT\n");
-        fflush(writeFile[pa->nextTurn]);
-
-        // Get next move
         char firstLetter;
         char secondLetter;
         char newLine;
-        fscanf(readFile[pa->nextTurn], "%c%c%d%c", &firstLetter, &secondLetter,
-            &(pa->nextMove)[pa->nextTurn], &newLine);
+        calc_next_turn(myPath, pa);
+
+        // Send YT
+        if (endOfChild) { // check end of child to avoid SIGPIPE
+            handle_end_of_child(childIds ,writeFile ,numberOfPlayers);
+        }
+        fprintf(writeFile[pa->nextTurn], "YT\n");
+        fflush(writeFile[pa->nextTurn]);
+
+        // Read DO
+        int read = fscanf(readFile[pa->nextTurn], "%c%c%d%c", &firstLetter,
+                &secondLetter, &(pa->nextMove)[pa->nextTurn], &newLine);
         // check whether message follows formar "DO" + site + '\n or not
-        if (firstLetter != 'D' || secondLetter != 'O' ||
+        if (read != 4 || firstLetter != 'D' || secondLetter != 'O' ||
                 pa->nextMove[pa->nextTurn] > myPath->numberOfSites ||
                 newLine != '\n') { // Comms error
             send_last_message(childIds, numberOfPlayers, writeFile, readFile,
                     pipesWrite, pipesRead, true);
         }
-        // Handle Move
         handle_move(stdout, myDeck, myPath, pa,
                 pa->nextTurn, (pa->nextMove)[pa->nextTurn]);
 
+        // Send HAP
+        if (endOfChild) {
+            handle_end_of_child(childIds ,writeFile ,numberOfPlayers);
+        }
         for (int id = 0; id < numberOfPlayers; id++) {
-            // FILE* testdealer = fopen("testdealer", "w");
-            // fprintf(testdealer, "HAP%d,%d,%d,%d,%d\n", (pa->nextTurn),
-            // (pa->nextMove)[pa->nextTurn], (pa->pointChange)[pa->nextTurn],
-            // (pa->moneyChange)[pa->nextTurn], pa->nextCard);
-            // Send HAP
             fprintf(writeFile[id], "HAP%d,%d,%d,%d,%d\n", (pa->nextTurn),
             (pa->nextMove)[pa->nextTurn], (pa->pointChange)[pa->nextTurn],
             (pa->moneyChange)[pa->nextTurn], pa->nextCard);
@@ -430,13 +433,12 @@ void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
     }
 }
 
-void run_game(Deck* myDeck, Path* myPath, Participant* pa, char** argv) {    
-    // struct sigaction sa;
-    // memset(&sa, 0, sizeof(struct sigaction));
-    // sa.sa_handler = sighub_handler;
-    // sa.sa_flags = SA_RESTART;
-    // sigaction(SIGHUP, &sa, 0);
-    
+void run_game(Deck* myDeck, Path* myPath, Participant* pa, char** argv) {
+    struct sigaction sigchildAction;
+    sigchildAction.sa_handler = sigchild_handler;
+    sigchildAction.sa_flags = SA_RESTART | SA_NOCLDSTOP;
+    sigaction(SIGCHLD, &sigchildAction, 0);   
+
     // Set up default variables
     set_up(myPath, pa);
     display_game(stdout, myPath, pa);

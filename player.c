@@ -172,7 +172,6 @@ int next_move_a(Path* myPath, Player* p, Participant* pa) {
     return nextMove;
 }
 
-// Handle input
 bool get_hap(char* buffer, Path* myPath, Player* p, Participant* pa) {
     int size = sizeof("HAP");
     char tempStr[size];
@@ -186,7 +185,7 @@ bool get_hap(char* buffer, Path* myPath, Player* p, Participant* pa) {
         newPosition = 1,    // n
         addPoint = 2,       // s
         moneyChange = 3,    // m
-        card = 4            // c
+        receivedCard = 4            // c
     };
 
     if (strcmp(tempStr, "HAP")) { //if three first chars are "HAP"
@@ -215,23 +214,27 @@ bool get_hap(char* buffer, Path* myPath, Player* p, Participant* pa) {
         }
     }
 
-    if (hapInfo[card] < 0 || hapInfo[card] > numOfLetters) {
+    int id = hapInfo[receivedId];
+    int toPosition = hapInfo[newPosition];
+    int card = hapInfo[receivedCard];
+
+    if (id >= pa->numberOfPlayers ||
+            toPosition >= myPath->numberOfSites ||
+            card < 0 || card > numOfLetters) {
         return false;
     }
 
-    int id = hapInfo[receivedId];
     pa->nextTurn = id; 
     pa->moneys[id] += negativeMoneys ? -hapInfo[moneyChange] :
             hapInfo[moneyChange];
     pa->points[id] += hapInfo[addPoint];
-    pa->cards[id][hapInfo[card] - 1] += 1;
+    pa->cards[id][card - 1] += 1;
 
-    handle_move(stderr, NULL, myPath, pa, id, hapInfo[newPosition]);
+    handle_move(stderr, NULL, myPath, pa, id, toPosition);
     return true;
 }
 
-void handle_input(Path* myPath, Player* p, Participant* pa,
-        char playerType) {
+void handle_input(Path* myPath, Player* p, Participant* pa, char playerType) {
     int defaultBufferSize = 20;
     char* buffer = malloc(sizeof(char) * defaultBufferSize);
 

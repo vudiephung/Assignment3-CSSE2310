@@ -1,6 +1,8 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include <sys/types.h>
+#include <unistd.h>
 #include "deck.h"
 #include "path.h"
 #include "errors.h"
@@ -34,6 +36,9 @@ void send_last_message(pid_t* childIds, int numberOfPlayers,
 void initial_game(int numberOfPlayers, FILE** writeFile, FILE** readFile,
         int** pipesWrite, int** pipesRead, pid_t* childIds, char* rawFile,
         char** argv);
+
+void handle_end_of_child(pid_t* childIds, FILE** writeFile,
+                int numberOfPlayers);
 
 void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
         FILE** writeFile, FILE** readFile,

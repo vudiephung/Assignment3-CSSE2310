@@ -9,13 +9,9 @@
 #include <string.h>
 #include <stdlib.h>
 
-bool receivedSighub = false;
-
 void sighub_handler(int s) {
-    receivedSighub = true;
     kill(-1 * (getpid()), SIGKILL);
-    // waitpid(-1, NULL, WNOHANG);
-    // exit(handle_error_message(COMMUNICATION));
+    wait(NULL);
 }
 
 void clean_up(void) { //
@@ -23,11 +19,11 @@ void clean_up(void) { //
 }
 
 int main(int argc, char** argv){
-    struct sigaction sa;
-    memset(&sa, 0, sizeof(struct sigaction));
-    sa.sa_handler = sighub_handler;
-    sa.sa_flags = SA_RESTART;
-    sigaction(SIGHUP, &sa, 0);
+    struct sigaction sighubAction;
+    memset(&sighubAction, 0, sizeof(struct sigaction));
+    sighubAction.sa_handler = sighub_handler;
+    sighubAction.sa_flags = SA_RESTART;
+    sigaction(SIGHUP, &sighubAction, 0);
 
     if (argc < 4) {
         return handle_error_message(NUMS_OF_ARGS_DEALER);
