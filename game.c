@@ -409,9 +409,6 @@ void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
         // Read DO
         int read = fscanf(readFile[pa->nextTurn], "%c%c%d%c", &firstLetter,
                 &secondLetter, &(pa->nextMove)[pa->nextTurn], &newLine);
-        if (read == EOF) {
-            exit(handle_error_message(COMMUNICATION));
-        }
         // check whether message follows formar "DO" + site + '\n or not
         if (read != 4 || firstLetter != 'D' || secondLetter != 'O' ||
                 pa->nextMove[pa->nextTurn] > myPath->numberOfSites ||
@@ -423,7 +420,6 @@ void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
                 pa->nextTurn, (pa->nextMove)[pa->nextTurn]);
 
         // Send HAP
-        sleep(5);
         if (endOfChild) {
             handle_end_of_child(childIds ,writeFile ,numberOfPlayers);
         }

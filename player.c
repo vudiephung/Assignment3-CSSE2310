@@ -45,6 +45,7 @@ int find_index_of_max(int* array, int size) {
                 index = i;
             }
         } else if (array[i] > max) {
+            max = array[i];
             index = i;
         }
     }
@@ -85,11 +86,15 @@ int next_move_b(Path* myPath, Player* p, Participant* pa) {
     int nextMove;
     bool laterSite = true;
 
-    bool noCardsFound = false;
+    bool noCardsFound = true;
     int mostCardsOwner = most_cards_owner(pa, &noCardsFound);
     bool foundRi = false;
     bool foundV2 = false;
     bool foundOthers = false;
+
+
+    FILE* test = fopen("test", "a");
+    fprintf(test, "Turn: %d Most card player: %d\n", id, mostCardsOwner);
     // next site is barrier
     if (sites[currentPos + 1][SITE] == get_type_enum("::")) {
         return currentPos + 1;
@@ -120,6 +125,7 @@ int next_move_b(Path* myPath, Player* p, Participant* pa) {
                 if (noCardsFound || mostCardsOwner == id) {
                     foundRi = true;
                     nextMove = i;
+                    noCardsFound = false;
                 }
             } else if (!foundRi && !foundV2 &&
                     sites[i][SITE] == get_type_enum("V2")) {

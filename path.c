@@ -143,6 +143,11 @@ void handle_path(FILE* pathFile, Path* myPath, const int* numberOfPlayers) {
         rawPath[i] = (char)next;
     }
 
+    if (rawPath[sizeOfPath - 1] != '\n') {
+        myPath->valid = false;
+        return;
+    }
+
     myPath->rawFile = rawPath;
 
     // rawSites does not include numberOfSites and ';'
