@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Werror -lm -pedantic -g -std=gnu99
+CFLAGS = -Wall -lm -pedantic -g -std=gnu99
 .DEFAULT_GOAL := all
 
 all: ass3 a b

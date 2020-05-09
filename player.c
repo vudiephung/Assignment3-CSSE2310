@@ -54,7 +54,7 @@ int find_index_of_max(int* array, int size) {
 int most_cards_owner (Participant* pa, bool* noCardsFound) {
     int numberOfPlayers = pa->numberOfPlayers;
     int** cards = pa->cards;
-    int owner = 0;
+    int owner;
 
     int* cardsCollected = malloc(sizeof(int) * numberOfPlayers);
 
@@ -85,7 +85,7 @@ int next_move_b(Path* myPath, Player* p, Participant* pa) {
     int nextMove;
     bool laterSite = true;
 
-    bool noCardsFound = true;
+    bool noCardsFound = false;
     int mostCardsOwner = most_cards_owner(pa, &noCardsFound);
     bool foundRi = false;
     bool foundV2 = false;

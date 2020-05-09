@@ -399,7 +399,7 @@ void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
         char secondLetter;
         char newLine;
         calc_next_turn(myPath, pa);
-
+        sleep(20);
         // Send YT
         if (endOfChild) { // check end of child to avoid SIGPIPE
             handle_end_of_child(childIds ,writeFile ,numberOfPlayers);
@@ -410,6 +410,9 @@ void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
         // Read DO
         int read = fscanf(readFile[pa->nextTurn], "%c%c%d%c", &firstLetter,
                 &secondLetter, &(pa->nextMove)[pa->nextTurn], &newLine);
+        if (read == EOF) {
+            exit(handle_error_message(COMMUNICATION));
+        }
         // check whether message follows formar "DO" + site + '\n or not
         if (read != 4 || firstLetter != 'D' || secondLetter != 'O' ||
                 pa->nextMove[pa->nextTurn] > myPath->numberOfSites ||

@@ -11,6 +11,8 @@
 
 void set_up(Path* myPath, Participant* p);
 
+void calc_next_turn(Path* myPath, Participant* pa);
+
 void handle_move(FILE* file, Deck* myDeck, Path* myPath, Participant* p,
         int playerId, const int toPosition);
 

@@ -29,7 +29,6 @@ SiteType get_type_enum(const char* site) {
     if (!strcmp(site, "::")) {
         return BARRIER;
     }
-    printf("Error Site Type\n");
     return ERROR_TYPE;
 }
 
