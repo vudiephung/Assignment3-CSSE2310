@@ -399,7 +399,6 @@ void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
         char secondLetter;
         char newLine;
         calc_next_turn(myPath, pa);
-        sleep(20);
         // Send YT
         if (endOfChild) { // check end of child to avoid SIGPIPE
             handle_end_of_child(childIds ,writeFile ,numberOfPlayers);
