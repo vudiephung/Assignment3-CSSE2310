@@ -56,7 +56,6 @@ char* get_type_char(const int* site) {
     default:
         break;
     }
-
     return siteName;
 }
 
@@ -142,11 +141,6 @@ void handle_path(FILE* pathFile, Path* myPath, const int* numberOfPlayers) {
     for (int i = digitsCount + 1; i < sizeOfPath; i++) {
         next = fgetc(pathFile);
         rawPath[i] = (char)next;
-    }
-
-    if (rawPath[sizeOfPath - 1] != '\n') {
-        myPath->valid = false;
-        return;
     }
 
     myPath->rawFile = rawPath;

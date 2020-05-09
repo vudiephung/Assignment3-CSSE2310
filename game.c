@@ -423,6 +423,7 @@ void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
                 pa->nextTurn, (pa->nextMove)[pa->nextTurn]);
 
         // Send HAP
+        sleep(5);
         if (endOfChild) {
             handle_end_of_child(childIds ,writeFile ,numberOfPlayers);
         }
