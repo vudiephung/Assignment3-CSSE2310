@@ -321,7 +321,7 @@ void initial_game(int numberOfPlayers, FILE** writeFile, FILE** readFile,
             exit(handle_error_message(STARTING_PROCESS));
         }
 
-        childIds[id] = fork(); ////
+        childIds[id] = fork();
 
         if (childIds[id] == -1) {
             exit(handle_error_message(STARTING_PROCESS));

@@ -134,7 +134,8 @@ void handle_path(FILE* pathFile, Path* myPath, const int* numberOfPlayers) {
     int sizeOfPath = digitsCount + numberOfChars + 2;
     myPath->sizeOfPath = sizeOfPath;
 
-    char* rawPath = malloc(sizeof(char) * sizeOfPath);
+    char* rawPath = malloc(sizeof(char) * (sizeOfPath + 1));
+    // char rawPath[sizeOfPath];
     int pos = digitsCount - 1;
     while(numberOfSites) {
         rawPath[pos--] = (numberOfSites % 10) + '0';
@@ -145,11 +146,6 @@ void handle_path(FILE* pathFile, Path* myPath, const int* numberOfPlayers) {
         next = fgetc(pathFile);
         rawPath[i] = (char)next;
     }
-
-    // if (rawPath[sizeOfPath - 1] != '\n') {
-    //     myPath->valid = false;
-    //     return;
-    // }
 
     myPath->rawFile = rawPath;
 
