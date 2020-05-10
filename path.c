@@ -63,7 +63,7 @@ void get_sites(Path* myPath, const char* tempSites,
         const int* numberOfPlayers) {
     char buffer[CHARS_OF_SITE];
     int numberOfSites = myPath->numberOfSites;
-    int* available_capacity = malloc(sizeof(int) * numberOfSites);
+    int* availableCapacity = malloc(sizeof(int) * numberOfSites);
     int** sites = malloc(sizeof(int*) * numberOfSites);
     for (int i = 0; i < numberOfSites; i++) {
         sites[i] = malloc (sizeof(int) * 2);
@@ -73,7 +73,7 @@ void get_sites(Path* myPath, const char* tempSites,
     for (int i = 0; i < numberOfSites * CHARS_OF_SITE_AND_LIMIT; 
             i += CHARS_OF_SITE_AND_LIMIT) {
         int limitOfCurrentSite;
-        memcpy(buffer, tempSites + i, CHARS_OF_SITE);
+        strncpy(buffer, tempSites + i, CHARS_OF_SITE);
         SiteType s = get_type_enum(buffer);
 
         // both first site and last site must be barrier
@@ -104,11 +104,11 @@ void get_sites(Path* myPath, const char* tempSites,
         currentSiteAndCapacity[SITE] = s;
         currentSiteAndCapacity[CAPACITY] = limitOfCurrentSite;
         sites[position] = currentSiteAndCapacity;
-        available_capacity[position] = limitOfCurrentSite;
+        availableCapacity[position] = limitOfCurrentSite;
         position++;
         // free(currentSiteAndCapacity);
     }
-    myPath->available_capacity = available_capacity;
+    myPath->available_capacity = availableCapacity;
     myPath->valid = true;
     myPath->sites = sites;
 }
@@ -127,8 +127,8 @@ void handle_path(FILE* pathFile, Path* myPath, const int* numberOfPlayers) {
     int numberOfChars = numberOfSites * CHARS_OF_SITE_AND_LIMIT;
     myPath->numberOfSites = numberOfSites;
     int digitsCount = count_number_digit(numberOfSites);
-    int sizeOfPath = digitsCount + numberOfChars + 2;   //2 more space for
-                                                        //'\n' and ';'
+    int sizeOfPath = digitsCount + numberOfChars + 1;   //2 more space for
+                                                        // ';'
     myPath->sizeOfPath = sizeOfPath;
 
     char* rawPath = malloc(sizeof(char) * sizeOfPath);
@@ -143,10 +143,10 @@ void handle_path(FILE* pathFile, Path* myPath, const int* numberOfPlayers) {
         rawPath[i] = (char)next;
     }
 
-    if (rawPath[sizeOfPath - 1] != '\n') {
-        myPath->valid = false;
-        return;
-    }
+    // if (rawPath[sizeOfPath - 1] != '\n') {
+    //     myPath->valid = false;
+    //     return;
+    // }
 
     myPath->rawFile = rawPath;
 
