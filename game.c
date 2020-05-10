@@ -7,7 +7,6 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include "string.h"
 #include "game.h"
 #include "errors.h"
 #include "path.h"

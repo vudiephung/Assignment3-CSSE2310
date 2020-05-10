@@ -5,7 +5,7 @@
 #include "player.h"
 #include "participants.h"
 
-int main (int argc, char** argv) {
+int main(int argc, char** argv) {
     Path* myPath = malloc(sizeof(Path) * 1);
     Player* p = malloc(sizeof(Player) * 1);
     Participant* pa = malloc(sizeof(Participant) * 1);

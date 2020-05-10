@@ -111,7 +111,7 @@ void get_sites(Path* myPath, const char* tempSites,
         position++;
         // free(currentSiteAndCapacity);
     }
-    myPath->available_capacity = availableCapacity;
+    myPath->availableCapacity = availableCapacity;
     myPath->valid = true;
     myPath->sites = sites;
 }

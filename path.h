@@ -16,7 +16,7 @@
 #define DEFAULT_MONEY 7
 #define EMPTY_VALUE -1
 
-typedef enum Sites{
+typedef enum Sites {
     MONEY = 0,
     V1 = 1,
     V2 = 2,
@@ -26,12 +26,12 @@ typedef enum Sites{
     ERROR_TYPE = 6
 } SiteType;
 
-typedef struct pathFile {
+typedef struct Path {
     int numberOfSites;
     char* rawFile;
     int sizeOfPath;
     int** sites;
-    int* available_capacity;
+    int* availableCapacity;
     bool valid;
 } Path;
 

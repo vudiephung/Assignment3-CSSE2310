@@ -27,7 +27,7 @@ void handle_deck(FILE* deckFile, Deck *myDeck) {
     if (numberOfCards < 4) {
         myDeck->valid = false;
         return;
-    } 
+    }
     char* cards = malloc(sizeof(char) * (numberOfCards + 1));
     for (int i = 0; i < numberOfCards + 1; i++) {
         next = fgetc(deckFile);

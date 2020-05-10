@@ -3,11 +3,11 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-char* number_to_string(int num) {
-    int ditgitsCount = count_number_digit(num);
-    char* numStr = malloc(sizeof(char) * ditgitsCount);
-    sprintf(numStr, "%d", num);
-    return numStr;
+char* number_to_string(int number) {
+    int ditgitsCount = count_number_digit(number);
+    char* numberAsString = malloc(sizeof(char) * ditgitsCount);
+    sprintf(numberAsString, "%d", number);
+    return numberAsString;
 }
 
 int count_number_digit(int num) {
@@ -26,7 +26,7 @@ int find_max(int* array, int size, int* index) {
     }
     for (int i = 1; i < size; i++) {
         if (array[i] > max) {
-            max  = array[i];
+            max = array[i];
             if (index != NULL) {
                 *index = i;
             }
@@ -35,26 +35,27 @@ int find_max(int* array, int size, int* index) {
     return max;
 }
 
-void swap(int *a, int *b) { 
-    int temp = *a; 
-    *a = *b; 
-    *b = temp; 
+void swap(int* firstNumber, int* secondNumber) { 
+    int temp = *firstNumber; 
+    *firstNumber = *secondNumber; 
+    *secondNumber = temp; 
 } 
   
 // A function to implement bubble sort 
 void bubble_sort(int* array, int size) { 
-   int i, j; 
-   for (i = 0; i < size - 1; i++) {
+    int i, j; 
+    for (i = 0; i < size - 1; i++) {
         for (j = 0; j < size - i - 1; j++) {
-            if (array[j] > array[j + 1]) 
-            swap(&array[j], &array[j + 1]); 
+            if (array[j] > array[j + 1]) {
+                swap(&array[j], &array[j + 1]); 
+            }
         }
-   }
+    }
 } 
 
-bool is_digits_only(const char* str, int* value) {
-    char tempChar;
-    return (sscanf(str, "%d%c", value, &tempChar) == 1);
+bool is_digits_only(const char* myString, int* value) {
+    char temporaty;
+    return (sscanf(myString, "%d%c", value, &temporaty) == 1);
 }
 
 bool read_line(FILE* file, char* buffer, int* size) {

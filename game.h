@@ -28,7 +28,7 @@ bool is_end_game(Path* myPath, Participant* pa);
 
 void calc_scores(FILE* file, Participant* pa);
 
-void close_pipes_and_files (int id, int** pipesWrite, int** pipesRead,
+void close_pipes_and_files(int id, int** pipesWrite, int** pipesRead,
         FILE** writeFile, FILE** readFile);
 
 void send_last_message(pid_t* childIds, int numberOfPlayers, 
@@ -40,7 +40,7 @@ void initial_game(int numberOfPlayers, FILE** writeFile, FILE** readFile,
         char** argv);
 
 void handle_end_of_child(pid_t* childIds, FILE** writeFile,
-                int numberOfPlayers);
+        int numberOfPlayers);
 
 void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
         FILE** writeFile, FILE** readFile,

@@ -52,7 +52,7 @@ int find_index_of_max(int* array, int size) {
     return index;
 }
 
-int most_cards_owner (Participant* pa, bool* noCardsFound) {
+int most_cards_owner(Participant* pa, bool* noCardsFound) {
     int numberOfPlayers = pa->numberOfPlayers;
     int** cards = pa->cards;
     int owner;
@@ -119,7 +119,7 @@ int next_move_b(Path* myPath, Player* p, Participant* pa) {
                 return i;
             }
             if (!foundRi && sites[i][SITE] == get_type_enum("Ri") &&
-                    (noCardsFound || mostCardsOwner == id)){
+                    (noCardsFound || mostCardsOwner == id)) {
                 foundRi = true;
                 nextMove = i;
                 noCardsFound = false;
@@ -178,21 +178,20 @@ int next_move_a(Path* myPath, Player* p, Participant* pa) {
 
 bool get_hap(char* buffer, Path* myPath, Player* p, Participant* pa) {
     int size = sizeof("HAP");
-    char tempStr[size];
-    memcpy(tempStr, buffer, size - 1);
-    tempStr[size - 1] = '\0';
+    char temporaryString[size];
+    memcpy(temporaryString, buffer, size - 1);
+    temporaryString[size - 1] = '\0';
     bool negativeMoneys = false;
     const int numOfLetters = 5;
 
-    enum {
-        receivedId = 0,     // p
-        newPosition = 1,    // n
-        addPoint = 2,       // s
-        moneyChange = 3,    // m
-        receivedCard = 4    // c
-    };
 
-    if (strcmp(tempStr, "HAP")) { //if three first chars are "HAP"
+    const int receivedId = 0;     // p
+    const int newPosition = 1;    // n
+    const int addPoint = 2;       // s
+    const int moneyChange = 3;    // m
+    const int receivedCard = 4;   // c
+
+    if (strcmp(temporaryString, "HAP")) { //if three first chars are "HAP"
         return false;
     }
 
@@ -201,7 +200,7 @@ bool get_hap(char* buffer, Path* myPath, Player* p, Participant* pa) {
     char comma;
     int hapInfo[5];
 
-    for (int i = 0; i < sizeof(hapInfo)/sizeof(int); i++) {
+    for (int i = 0; i < sizeof(hapInfo) / sizeof(int); i++) {
         if (sscanf(hapMessage, "%d", &hapInfo[i]) != 1) {
             return false;
         }
@@ -247,7 +246,8 @@ void handle_input(Path* myPath, Player* p, Participant* pa, char playerType) {
         if (read_line(stdin, buffer, &defaultBufferSize)) {
             if (!strcmp(buffer, "YT")) {
                 // return a move
-                int nextMove = playerType == 'A' ? next_move_a(myPath, p, pa):
+                int nextMove = playerType == 'A' ?
+                        next_move_a(myPath, p, pa) :
                         next_move_b(myPath, p, pa);
                 printf("DO%d\n", nextMove);
                 fflush(stdout);

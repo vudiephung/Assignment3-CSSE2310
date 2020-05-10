@@ -2,13 +2,8 @@
 #define PARTICIPANTS_H
 
 #define NUM_A_TO_E 5
-// #define A 1
-// #define B 2
-// #define C 3
-// #define D 4
-// #define E 5
 
-typedef struct participant {
+typedef struct Participant {
     int numberOfPlayers;
     int nextTurn;
     int nextCard;
