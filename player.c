@@ -168,7 +168,8 @@ int next_move_a(Path* myPath, Player* p, Participant* pa) {
                     continue;
                 }
             } else if (!foundMo && !foundOthers &&
-                    sites[i][SITE] != get_type_enum("Ri")) {
+                    sites[i][SITE] != get_type_enum("Ri") &&
+                    sites[i][SITE] != get_type_enum("Mo")) {
                 nextMove = i;
                 foundOthers = true;
             }
