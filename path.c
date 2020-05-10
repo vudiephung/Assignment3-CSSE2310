@@ -73,7 +73,6 @@ void get_sites(Path* myPath, const char* tempSites,
     for (int i = 0; i < numberOfSites * CHARS_OF_SITE_AND_LIMIT; 
             i += CHARS_OF_SITE_AND_LIMIT) {
         int limitOfCurrentSite;
-        // memcpy(buffer, tempSites + i, CHARS_OF_SITE);
         for (int j = 0; j < CHARS_OF_SITE; j++) {
             buffer[j] = (tempSites + i)[j];
         }

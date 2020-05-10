@@ -393,7 +393,7 @@ void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
         FILE** writeFile, FILE** readFile,
         int** pipesWrite, int** pipesRead) {
     int numberOfPlayers = pa->numberOfPlayers;
-
+    display_game(stdout, myPath, pa);
     while (!is_end_game(myPath, pa)) {
         char firstLetter;
         char secondLetter;
@@ -440,7 +440,6 @@ void run_game(Deck* myDeck, Path* myPath, Participant* pa, char** argv) {
 
     // Set up default variables
     set_up(myPath, pa);
-    display_game(stdout, myPath, pa);
     
     int numberOfPlayers = pa->numberOfPlayers; // 2 (int)
     char* rawFile = myPath->rawFile;
