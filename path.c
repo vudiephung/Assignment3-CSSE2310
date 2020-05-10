@@ -61,7 +61,7 @@ char* get_type_char(const int* site) {
 
 void get_sites(Path* myPath, const char* tempSites,
         const int* numberOfPlayers) {
-    char buffer[CHARS_OF_SITE];
+    char buffer[CHARS_OF_SITE + 1];
     int numberOfSites = myPath->numberOfSites;
     int* availableCapacity = malloc(sizeof(int) * numberOfSites);
     int** sites = malloc(sizeof(int*) * numberOfSites);
@@ -73,7 +73,11 @@ void get_sites(Path* myPath, const char* tempSites,
     for (int i = 0; i < numberOfSites * CHARS_OF_SITE_AND_LIMIT; 
             i += CHARS_OF_SITE_AND_LIMIT) {
         int limitOfCurrentSite;
-        strncpy(buffer, tempSites + i, CHARS_OF_SITE);
+        // memcpy(buffer, tempSites + i, CHARS_OF_SITE);
+        for (int j = 0; j < CHARS_OF_SITE; j++) {
+            buffer[j] = (tempSites + i)[j];
+        }
+        buffer[CHARS_OF_SITE] = '\0';
         SiteType s = get_type_enum(buffer);
 
         // both first site and last site must be barrier
@@ -124,11 +128,11 @@ void handle_path(FILE* pathFile, Path* myPath, const int* numberOfPlayers) {
         return;
     }
 
-    int numberOfChars = numberOfSites * CHARS_OF_SITE_AND_LIMIT;
     myPath->numberOfSites = numberOfSites;
     int digitsCount = count_number_digit(numberOfSites);
-    int sizeOfPath = digitsCount + numberOfChars + 1;   //2 more space for
-                                                        // ';'
+    int numberOfChars = numberOfSites * CHARS_OF_SITE_AND_LIMIT;
+    // 2 more space for ';' and '\n'
+    int sizeOfPath = digitsCount + numberOfChars + 2;
     myPath->sizeOfPath = sizeOfPath;
 
     char* rawPath = malloc(sizeof(char) * sizeOfPath);
