@@ -257,7 +257,8 @@ void calc_scores(FILE* file, Participant* pa) {
                 pointsChange = cards[id][i] * maxPointsOfASet;
                 maxPointsOfASet -= 3;
             } else {
-                pointsChange = (cards[id][i] - cards[id][i - 1]) * maxPointsOfASet;
+                pointsChange = (cards[id][i] - cards[id][i - 1]) *
+                        maxPointsOfASet;
                 maxPointsOfASet -= 2;
             }
             pa->points[id] += pointsChange;
@@ -272,7 +273,7 @@ void calc_scores(FILE* file, Participant* pa) {
     }
 }
 
-void close_pipes_and_files (int id, int** pipesWrite, int** pipesRead,
+void close_pipes_and_files(int id, int** pipesWrite, int** pipesRead,
         FILE** writeFile, FILE** readFile) {
     fclose(writeFile[id]);
     fclose(readFile[id]);
@@ -285,7 +286,7 @@ void close_pipes_and_files (int id, int** pipesWrite, int** pipesRead,
 void send_last_message(pid_t* childIds, int numberOfPlayers, 
         FILE** writeFile, FILE** readFile, int** pipesWrite, int** pipesRead,
         bool early) {
-    for (int id = 0; id < numberOfPlayers; id ++) {
+    for (int id = 0; id < numberOfPlayers; id++) {
         if (early) {
             fprintf(writeFile[id], "EARLY\n");
             fflush(writeFile[id]);        
@@ -309,7 +310,7 @@ void initial_game(int numberOfPlayers, FILE** writeFile, FILE** readFile,
         int** pipesWrite, int** pipesRead, pid_t* childIds, char* rawFile,
         char** argv) {
     int playerPosition = 3; // first position of executable program is 3
-    char* playersCountStr = number_to_string(numberOfPlayers); // "2" (char*)
+    char* playersCountString = number_to_string(numberOfPlayers); // "2"
     for (int id = 0; id < numberOfPlayers; id++) {
         char* currentPlayer = argv[playerPosition++]; // "./2310A"
         //create two pipe
@@ -338,14 +339,14 @@ void initial_game(int numberOfPlayers, FILE** writeFile, FILE** readFile,
             dup2(nullDescriptor, 2);
             close(nullDescriptor);
 
-            char* playerIdStr = number_to_string(id);
+            char* playerIdString = number_to_string(id);
             if (execlp(currentPlayer, currentPlayer,
-                    playersCountStr, playerIdStr, NULL) == -1) {
-                free(playerIdStr);
+                    playersCountString, playerIdString, NULL) == -1) {
+                free(playerIdString);
                 exit(handle_error_message(STARTING_PROCESS));
             }
 
-            free(playerIdStr);
+            free(playerIdString);
         } else { // Parent
             close(pipesWrite[id][READ_END]);
             close(pipesRead[id][WRITE_END]);
@@ -367,10 +368,10 @@ void initial_game(int numberOfPlayers, FILE** writeFile, FILE** readFile,
         }
     }
 
-    free(playersCountStr);
+    free(playersCountString);
 }
 
-void handle_end_of_child (pid_t* childIds, FILE** writeFile,
+void handle_end_of_child(pid_t* childIds, FILE** writeFile,
         int numberOfPlayers) {
     pid_t pid;
     while (pid = waitpid(-1, 0, WNOHANG), pid > 0) {
@@ -400,7 +401,7 @@ void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
         calc_next_turn(myPath, pa);
         // Send YT
         if (endOfChild) { // check end of child to avoid SIGPIPE
-            handle_end_of_child(childIds ,writeFile ,numberOfPlayers);
+            handle_end_of_child(childIds, writeFile, numberOfPlayers);
         }
         fprintf(writeFile[pa->nextTurn], "YT\n");
         fflush(writeFile[pa->nextTurn]);
@@ -420,12 +421,15 @@ void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
 
         // Send HAP
         if (endOfChild) {
-            handle_end_of_child(childIds ,writeFile ,numberOfPlayers);
+            handle_end_of_child(childIds, writeFile, numberOfPlayers);
         }
         for (int id = 0; id < numberOfPlayers; id++) {
-            fprintf(writeFile[id], "HAP%d,%d,%d,%d,%d\n", (pa->nextTurn),
-            (pa->nextMove)[pa->nextTurn], (pa->pointChange)[pa->nextTurn],
-            (pa->moneyChange)[pa->nextTurn], pa->nextCard);
+            fprintf(writeFile[id], "HAP%d,%d,%d,%d,%d\n",
+                    (pa->nextTurn),
+                    (pa->nextMove)[pa->nextTurn],
+                    (pa->pointChange)[pa->nextTurn],
+                    (pa->moneyChange)[pa->nextTurn],
+                    pa->nextCard);
             fflush(writeFile[id]);
         }
     }
