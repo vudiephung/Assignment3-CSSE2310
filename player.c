@@ -92,15 +92,12 @@ int next_move_b(Path* myPath, Player* p, Participant* pa) {
     bool foundV2 = false;
     bool foundOthers = false;
 
-
-    FILE* test = fopen("test", "a");
-    fprintf(test, "Turn: %d Most card player: %d\n", id, mostCardsOwner);
     // next site is barrier
     if (sites[currentPos + 1][SITE] == get_type_enum("::")) {
         return currentPos + 1;
     }
 
-    // next site is empty
+    // next site is not full
     if (pa->sizes[currentPos + 1] < sites[currentPos + 1][CAPACITY]) {
         // all of others players are on the later sites
         for (int i = 0; i < pa->numberOfPlayers; i++) {
@@ -121,13 +118,13 @@ int next_move_b(Path* myPath, Player* p, Participant* pa) {
                     (moneys[id] % 2) != 0) {
                 return i;
             }
-            if (!foundRi && sites[i][SITE] == get_type_enum("Ri")){
-                if (noCardsFound || mostCardsOwner == id) {
-                    foundRi = true;
-                    nextMove = i;
-                    noCardsFound = false;
-                }
-            } else if (!foundRi && !foundV2 &&
+            if (!foundRi && sites[i][SITE] == get_type_enum("Ri") &&
+                    (noCardsFound || mostCardsOwner == id)){
+                foundRi = true;
+                nextMove = i;
+                noCardsFound = false;
+            }
+            if (!foundRi && !foundV2 &&
                     sites[i][SITE] == get_type_enum("V2")) {
                 foundV2 = true;
                 nextMove = i;
