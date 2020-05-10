@@ -191,7 +191,7 @@ bool get_hap(char* buffer, Path* myPath, Player* p, Participant* pa) {
         newPosition = 1,    // n
         addPoint = 2,       // s
         moneyChange = 3,    // m
-        receivedCard = 4            // c
+        receivedCard = 4    // c
     };
 
     if (strcmp(tempStr, "HAP")) { //if three first chars are "HAP"
@@ -264,7 +264,7 @@ void handle_input(Path* myPath, Player* p, Participant* pa, char playerType) {
                     exit(handle_player_errors(COMMUNICATION_PLAYER));
                 }
             }
-        } else {// cannot read handle input
+        } else { // cannot read from stdin
             exit(handle_player_errors(COMMUNICATION_PLAYER));
         }
     }

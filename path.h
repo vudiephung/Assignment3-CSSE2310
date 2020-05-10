@@ -40,13 +40,7 @@ char* get_type_char(const int* site);
 void get_sites(Path* myPath, const char* tempSites,
         const int* numberOfPlayers);
 void handle_path(FILE* pathFile, Path* myPath, const int* numberOfPlayers);
-bool is_valid_path_file(char* path, Path* myPath, const int* numberOfPlayers);
+bool is_valid_path(char* path, Path* myPath, const int* numberOfPlayers);
 int nearest_barrier(Path* myPath, const int* currentPosition);
-
-// void display_sites(Path* myPath);
-// void display_player_position(Path* myPath,
-//         int *numberOfPlayers, int *positions);
-// void display_dealer_output(Path* myPath, Participant* p);
-// void display_game(Path* myPath, Participant* p);
 
 #endif

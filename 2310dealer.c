@@ -40,7 +40,7 @@ int main(int argc, char** argv){
         return handle_error_message(DECK);
     }
 
-    if(!(is_valid_path_file(argv[2], myPath, &numberOfPlayers))) {
+    if(!(is_valid_path(argv[2], myPath, &numberOfPlayers))) {
         return handle_error_message(PATH);
     }
 

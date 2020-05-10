@@ -82,10 +82,10 @@ void get_sites(Path* myPath, const char* tempSites,
         // both first site and last site must be barrier
         if (i == 0 || i == numberOfSites * CHARS_OF_SITE_AND_LIMIT -
                 CHARS_OF_SITE_AND_LIMIT) {
-                    if (s != BARRIER) {
-                        myPath->valid = false;
-                        return;
-                    }
+            if (s != BARRIER) {
+                myPath->valid = false;
+                return;
+            }
         }
 
         if (s == ERROR_TYPE) {
@@ -158,7 +158,7 @@ void handle_path(FILE* pathFile, Path* myPath, const int* numberOfPlayers) {
     get_sites(myPath, rawSites, numberOfPlayers);
 }
 
-bool is_valid_path_file(char* path, Path* myPath, const int* numberOfPlayers) {
+bool is_valid_path(char* path, Path* myPath, const int* numberOfPlayers) {
     FILE* pathFile = fopen(path, "r");
     if (pathFile == NULL) {
         return false;
