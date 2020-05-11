@@ -10,7 +10,7 @@
 void errros_handler(int argc, char** argv, Path* myPath,
         Participant* pa, Player* p) {
     if (argc != 3) {
-        exit(handle_player_errors(NUMS_OF_ARGS_PLAYER));
+        exit(handle_player_errors(NUMS_OF_ARGS));
     }
 
     int numberOfPlayers;

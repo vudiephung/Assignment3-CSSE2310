@@ -38,26 +38,25 @@ void calc_next_turn(Path* myPath, Participant* pa) {
 }
 
 void set_up(Path* myPath, Participant* pa) {
+    const int defaultMoney = 7;
     int numberOfPlayers = pa->numberOfPlayers;
     int** positions = malloc(sizeof(int*) * numberOfPlayers);
     int** cards = malloc(sizeof(int*) * numberOfPlayers);
     int* moneys = malloc(sizeof(int) * numberOfPlayers);
     int* points = malloc(sizeof(int) * numberOfPlayers);
     int* sizes = malloc(sizeof(int) * (myPath->numberOfSites));
-    int* v1 = malloc(sizeof(int) * numberOfPlayers);
-    int* v2 = malloc(sizeof(int) * numberOfPlayers);
+    int* siteV1 = malloc(sizeof(int) * numberOfPlayers);
+    int* siteV2 = malloc(sizeof(int) * numberOfPlayers);
     int* pointChange = malloc(sizeof(int) * numberOfPlayers);
     int* moneyChange = malloc(sizeof(int) * numberOfPlayers);
     int* nextMove = malloc(sizeof(int) * numberOfPlayers);
 
     int largestId = numberOfPlayers - 1;
     for (int id = 0; id < numberOfPlayers; id++) {
-        moneys[id] = DEFAULT_MONEY;
+        moneys[id] = defaultMoney;
         points[id] = DEFAULT_VALUE;
-        v1[id] = DEFAULT_VALUE;
-        v2[id] = DEFAULT_VALUE;
-        pointChange[id] = DEFAULT_VALUE;
-        moneyChange[id] = DEFAULT_VALUE;
+        siteV1[id] = siteV2[id] = DEFAULT_VALUE;
+        pointChange[id] = moneyChange[id] = DEFAULT_VALUE;
         nextMove[id] = DEFAULT_VALUE;
         cards[id] = malloc(sizeof(int) * NUM_A_TO_E);
         for (int j = 0; j < NUM_A_TO_E; j++) {
@@ -79,8 +78,8 @@ void set_up(Path* myPath, Participant* pa) {
     pa->positions = positions;
     pa->moneys = moneys;
     pa->points = points;
-    pa->v1 = v1;
-    pa->v2 = v2;
+    pa->siteV1 = siteV1;
+    pa->siteV2 = siteV2;
     pa->pointChange = pointChange;
     pa->moneyChange = moneyChange;
     pa->cards = cards;
@@ -127,11 +126,11 @@ void handle_move(FILE* file, Deck* myDeck, Path* myPath, Participant* pa,
     }
 
     switch (nextSite) {
-        case V1:
-            (pa->v1)[playerId] += 1;
+        case SITE_V1:
+            (pa->siteV1)[playerId] += 1;
             break;
-        case V2:
-            (pa->v2)[playerId] += 1;
+        case SITE_V2:
+            (pa->siteV2)[playerId] += 1;
             break;
         default:
             break;
@@ -202,8 +201,9 @@ void display_player_position(FILE* file, Path* myPath, Participant* pa) {
 
 void display_dealer_output(FILE* file, Path* myPath, Participant* pa) {
     fprintf(file, "Player %d Money=%d V1=%d V2=%d Points=%d ",
-            (pa->nextTurn), (pa->moneys)[pa->nextTurn], (pa->v1)[pa->nextTurn],
-            (pa->v2)[pa->nextTurn], (pa->points)[pa->nextTurn]);
+            (pa->nextTurn), (pa->moneys)[pa->nextTurn],
+            (pa->siteV1)[pa->nextTurn],
+            (pa->siteV2)[pa->nextTurn], (pa->points)[pa->nextTurn]);
     fflush(file);
     for (int i = 0; i < NUM_A_TO_E; i++) {
         fprintf(file, "%c=%d", 'A' + i, (pa->cards)[pa->nextTurn][i]);
@@ -239,7 +239,7 @@ void calc_scores(FILE* file, Participant* pa) {
     fprintf(file, "Scores: ");
     for (int id = 0; id < numberOfPlayers; id++) {
         // Add V1,V2 scores
-        pa->points[id] += (pa->v1[id] + pa->v2[id]);
+        pa->points[id] += (pa->siteV1[id] + pa->siteV2[id]);
         // Add scores by collecting cards
         int maxPointsOfASet = 10;
         bubble_sort(cards[id], NUM_A_TO_E);
@@ -278,11 +278,12 @@ void close_pipes_and_files(int id, int** pipesWrite, int** pipesRead,
 void send_last_message(pid_t* childIds, int numberOfPlayers, 
         FILE** writeFile, FILE** readFile, int** pipesWrite, int** pipesRead,
         bool early) {
+    const int emptyValue = -1;
     pid_t pid;
     while (pid = waitpid(-1, 0, WNOHANG), pid > 0) {
         for (int i = 0; i < numberOfPlayers; i++) {
             if (childIds[i] == pid) {
-                childIds[i] = EMPTY_VALUE;
+                childIds[i] = emptyValue;
             }
         }
     }

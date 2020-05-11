@@ -14,9 +14,9 @@ SiteType get_type_enum(const char* site) {
     if (!strcmp(site, "Mo")) {
         return MONEY;
     } else if (!strcmp(site, "V1")) {
-        return V1;
+        return SITE_V1;
     } else if (!strcmp(site, "V2")) {
-        return V2;
+        return SITE_V2;
     } else if (!strcmp(site, "Do")) {
         return MONEY_2_POINT;
     } else if (!strcmp(site, "Ri")) {
@@ -34,10 +34,10 @@ char* get_type_char(SiteType site) {
         case MONEY:
             siteName = "Mo";
             break;
-        case V1:
+        case SITE_V1:
             siteName = "V1";
             break;
-        case V2:
+        case SITE_V2:
             siteName = "V2";
             break;
         case MONEY_2_POINT:
@@ -127,10 +127,8 @@ void handle_path(FILE* pathFile, Path* myPath, int numberOfPlayers) {
     int numberOfChars = numberOfSites * CHARS_OF_SITE_AND_LIMIT;
     // 2 more space for ';' and '\n'
     int sizeOfPath = digitsCount + numberOfChars + 2;
-    myPath->sizeOfPath = sizeOfPath;
 
     char* rawPath = malloc(sizeof(char) * (sizeOfPath + 1));
-    // char rawPath[sizeOfPath];
     int pos = digitsCount - 1;
     while(numberOfSites) {
         rawPath[pos--] = (numberOfSites % 10) + '0';

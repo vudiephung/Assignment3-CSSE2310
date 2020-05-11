@@ -6,7 +6,7 @@ Error handle_error_message(Error type) {
     switch (type) {
         case OK:
             return OK;
-        case NUMS_OF_ARGS_DEALER:
+        case NUMS_OF_ARGS:
             errorMessage = "Usage: 2310dealer deck path p1 {p2}";
             break;
         case DECK:
@@ -33,7 +33,7 @@ Error handle_player_errors(Error type) {
     switch (type) {
         case OK:
             return OK;
-        case NUMS_OF_ARGS_PLAYER:
+        case NUMS_OF_ARGS:
             errorMessage = "Usage: player pcount ID";
             break;
         case PLAYER_COUNT:

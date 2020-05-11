@@ -4,6 +4,8 @@
 #include "path.h"
 #include "participants.h"
 
+// For each player, the information about playerId and their current position
+// (in which site?) should be saved
 typedef struct {
     int playerId;
     int currentPos;

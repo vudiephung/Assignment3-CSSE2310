@@ -4,12 +4,15 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-typedef struct DeckFile {
-    int numberOfCards;
-    char* cards;
-    bool valid;
+// Struct DeckFile defines needed variable for a given Deck
+typedef struct DeckFile {   // e.g: 5ADBEC
+    int numberOfCards;      // Number of cards in deck file: 5
+    char* cards;            // Array of type char store each card in it:
+                            // ['A', 'D', 'B', 'E', 'C']
+    bool valid;             // true iff valid Deck file: true
 } Deck;
 
+// Save Card characters as a number -> easier to store in array later
 typedef enum Cards {
     CARD_A = 1,
     CARD_B = 2,

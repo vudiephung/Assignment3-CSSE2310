@@ -14,10 +14,6 @@ void sighub_handler(int s) {
     wait(NULL);
 }
 
-void clean_up(void) { //
-    return;
-}
-
 int main(int argc, char** argv){
     struct sigaction sighubAction;
     memset(&sighubAction, 0, sizeof(struct sigaction));
@@ -26,7 +22,7 @@ int main(int argc, char** argv){
     sigaction(SIGHUP, &sighubAction, 0);
 
     if (argc < 4) {
-        return handle_error_message(NUMS_OF_ARGS_DEALER);
+        return handle_error_message(NUMS_OF_ARGS);
     }
 
     Deck* myDeck = malloc(sizeof(Deck) * 1);
@@ -46,7 +42,5 @@ int main(int argc, char** argv){
 
     run_game(myDeck, myPath, p, argv);
 
-    clean_up();
-    // remember to free myDeck, cards, sites, myPath
     return 0;
 }
