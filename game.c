@@ -75,7 +75,6 @@ void set_up(Path* myPath, Participant* pa) {
         }
     }
 
-    // myPath->sites[0][CAPACITY] = 0;
     pa->positions = positions;
     pa->moneys = moneys;
     pa->points = points;
@@ -86,39 +85,32 @@ void set_up(Path* myPath, Participant* pa) {
     pa->cards = cards;
     pa->nextMove = nextMove;
     pa->sizes = sizes;
-    // remember to free !!!!!!!!!
 }
 
-int is_valid_move(Path* myPath, Participant* pa,
-        const int playerId, const int toPosition) {
-    int* currentPosition = &pa->positions[playerId][1];
-    int closestBarrier = nearest_barrier(myPath, currentPosition);
-    int nextSize = pa->sizes[toPosition];
-    int nextCap = myPath->sites[toPosition][CAPACITY];
+// int is_valid_move(Path* myPath, Participant* pa,
+//         const int playerId, const int toPosition) {
+//     int* currentPosition = &pa->positions[playerId][1];
+//     int closestBarrier = nearest_barrier(myPath, currentPosition);
+//     int nextSize = pa->sizes[toPosition];
+//     int nextCap = myPath->sites[toPosition][CAPACITY];
 
-    return (toPosition <= closestBarrier) && (nextSize < nextCap) &&
-            (toPosition > *currentPosition);
-}
+//     return (toPosition <= closestBarrier) && (nextSize < nextCap) &&
+//             (toPosition > *currentPosition);
+// }
 
 void handle_move(FILE* file, Deck* myDeck, Path* myPath, Participant* pa,
         int playerId, const int toPosition) {
     //position:
-    int** sites = myPath->sites;
     int** positions = pa->positions;
     int* currentPosition = &positions[playerId][1];
     int* currentRow = &positions[playerId][0];
     int* playerMoney = &(pa->moneys)[playerId];
-    int nextSite = sites[toPosition][SITE];
-
-    if (!is_valid_move(myPath, pa, playerId, toPosition)) {
-        return;
-    }
-
+    int nextSite = myPath->sites[toPosition][SITE];
     pa->nextCard = 0;
     pa->pointChange[playerId] = 0;
     pa->moneyChange[playerId] = 0;
 
-    if (file == stdout) { // dealer
+    if (file == stdout) { // dealer  !!!!!!!!!!!!!!!!!!!!
         if (nextSite == MONEY) {
             *playerMoney += 3;
             pa->moneyChange[playerId] = 3;
@@ -286,10 +278,18 @@ void close_pipes_and_files(int id, int** pipesWrite, int** pipesRead,
 void send_last_message(pid_t* childIds, int numberOfPlayers, 
         FILE** writeFile, FILE** readFile, int** pipesWrite, int** pipesRead,
         bool early) {
-    for (int id = 0; id < numberOfPlayers; id++) {
+    pid_t pid;
+    while (pid = waitpid(-1, 0, WNOHANG), pid > 0) {
+        for (int i = 0; i < numberOfPlayers; i++) {
+            if (childIds[i] == pid) {
+                childIds[i] = EMPTY_VALUE;
+            }
+        }
+    }
+    for (int id = 0; id < numberOfPlayers && childIds[id] != -1; id++) {
         if (early) {
             fprintf(writeFile[id], "EARLY\n");
-            fflush(writeFile[id]);        
+            fflush(writeFile[id]);
         } else {
             fprintf(writeFile[id], "DONE\n");
             fflush(writeFile[id]);
@@ -298,11 +298,55 @@ void send_last_message(pid_t* childIds, int numberOfPlayers,
         close_pipes_and_files(id, pipesWrite, pipesRead, writeFile, readFile);
     }
 
-    // reap
-    wait(NULL);
-
     if (early) {
         exit(handle_error_message(COMMUNICATION));
+    }
+}
+
+void handle_child(int id, char* currentPlayer, char* playersCountString,
+        FILE** writeFile, FILE** readFile,
+        int** pipesWrite, int** pipesRead) {
+    close(pipesWrite[id][WRITE_END]);
+    close(pipesRead[id][READ_END]);
+
+    dup2(pipesRead[id][WRITE_END], 1);
+    close(pipesRead[id][WRITE_END]);
+
+    dup2(pipesWrite[id][READ_END], 0);
+    close(pipesWrite[id][READ_END]);
+
+    int nullDescriptor = open("/dev/null", O_WRONLY);
+    dup2(nullDescriptor, 2);
+    close(nullDescriptor);
+
+    char* playerIdString = number_to_string(id);
+    if (execlp(currentPlayer, currentPlayer,
+            playersCountString, playerIdString, NULL) == -1) {
+        free(playerIdString);
+        exit(handle_error_message(STARTING_PROCESS));
+    }
+
+    free(playerIdString);
+}
+
+void handle_parent(int id, char* rawFile, FILE** writeFile, FILE** readFile,
+        int** pipesWrite, int** pipesRead) {
+    close(pipesWrite[id][READ_END]);
+    close(pipesRead[id][WRITE_END]);
+    writeFile[id] = fdopen(pipesWrite[id][WRITE_END], "w");
+    readFile[id] = fdopen(pipesRead[id][READ_END], "r");
+
+    // Read '^'
+    fflush(stdout);
+    char msg = (char)(fgetc(readFile[id]));
+    fflush(stdout);
+
+    if (msg == '^') {
+        // send path
+        fprintf(writeFile[id], "%s", rawFile);
+        fflush(writeFile[id]);
+    } else {
+        exit(handle_error_message(STARTING_PROCESS));
     }
 }
 
@@ -326,67 +370,15 @@ void initial_game(int numberOfPlayers, FILE** writeFile, FILE** readFile,
         if (childIds[id] == -1) {
             exit(handle_error_message(STARTING_PROCESS));
         } else if (childIds[id] == 0) { // Child
-            close(pipesWrite[id][WRITE_END]);
-            close(pipesRead[id][READ_END]);
-
-            dup2(pipesRead[id][WRITE_END], 1);
-            close(pipesRead[id][WRITE_END]);
-
-            dup2(pipesWrite[id][READ_END], 0);
-            close(pipesWrite[id][READ_END]);
-
-            int nullDescriptor = open("/dev/null", O_WRONLY);
-            dup2(nullDescriptor, 2);
-            close(nullDescriptor);
-
-            char* playerIdString = number_to_string(id);
-            if (execlp(currentPlayer, currentPlayer,
-                    playersCountString, playerIdString, NULL) == -1) {
-                free(playerIdString);
-                exit(handle_error_message(STARTING_PROCESS));
-            }
-
-            free(playerIdString);
+            handle_child(id, currentPlayer, playersCountString, writeFile,
+                    readFile, pipesWrite, pipesRead);
         } else { // Parent
-            close(pipesWrite[id][READ_END]);
-            close(pipesRead[id][WRITE_END]);
-            writeFile[id] = fdopen(pipesWrite[id][WRITE_END], "w");
-            readFile[id] = fdopen(pipesRead[id][READ_END], "r");
-
-            // Read '^'
-            fflush(stdout);
-            char msg = (char)(fgetc(readFile[id]));
-            fflush(stdout);
-
-            if (msg == '^') {
-                // send path
-                fprintf(writeFile[id], "%s", rawFile);
-                fflush(writeFile[id]);
-            } else {
-                exit(handle_error_message(STARTING_PROCESS));
-            }
+            handle_parent(id, rawFile, writeFile, readFile, pipesWrite,
+                    pipesRead);
         }
     }
 
     free(playersCountString);
-}
-
-void handle_end_of_child(pid_t* childIds, FILE** writeFile,
-        int numberOfPlayers) {
-    pid_t pid;
-    while (pid = waitpid(-1, 0, WNOHANG), pid > 0) {
-        for (int i = 0; i < numberOfPlayers; i++) {
-            if (childIds[i] == pid) {
-                childIds[i] = EMPTY_VALUE;
-            }
-        }
-    }
-    for (int id = 0; id < numberOfPlayers; id++) {
-        if (childIds[id] != -1) {
-            fprintf(writeFile[id], "EARLY\n");
-        }
-    }
-    exit(handle_error_message(COMMUNICATION));
 }
 
 void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
@@ -401,7 +393,8 @@ void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
         calc_next_turn(myPath, pa);
         // Send YT
         if (endOfChild) { // check end of child to avoid SIGPIPE
-            handle_end_of_child(childIds, writeFile, numberOfPlayers);
+            send_last_message(childIds, numberOfPlayers, writeFile, readFile,
+                    pipesWrite, pipesRead, true);
         }
         fprintf(writeFile[pa->nextTurn], "YT\n");
         fflush(writeFile[pa->nextTurn]);
@@ -420,16 +413,15 @@ void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
                 pa->nextTurn, (pa->nextMove)[pa->nextTurn]);
 
         // Send HAP
-        if (endOfChild) {
-            handle_end_of_child(childIds, writeFile, numberOfPlayers);
+        if (endOfChild) { // check end of child to avoid SIGPIPE
+            send_last_message(childIds, numberOfPlayers, writeFile, readFile,
+                    pipesWrite, pipesRead, true);
         }
         for (int id = 0; id < numberOfPlayers; id++) {
             fprintf(writeFile[id], "HAP%d,%d,%d,%d,%d\n",
-                    (pa->nextTurn),
-                    (pa->nextMove)[pa->nextTurn],
+                    (pa->nextTurn), (pa->nextMove)[pa->nextTurn],
                     (pa->pointChange)[pa->nextTurn],
-                    (pa->moneyChange)[pa->nextTurn],
-                    pa->nextCard);
+                    (pa->moneyChange)[pa->nextTurn], pa->nextCard);
             fflush(writeFile[id]);
         }
     }

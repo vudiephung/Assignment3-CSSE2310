@@ -9,9 +9,9 @@
 #include "participants.h"
 #include "utils.h"
 
-void set_up(Path* myPath, Participant* p);
-
 void calc_next_turn(Path* myPath, Participant* pa);
+
+void set_up(Path* myPath, Participant* p);
 
 void handle_move(FILE* file, Deck* myDeck, Path* myPath, Participant* p,
         int playerId, const int toPosition);
@@ -35,12 +35,16 @@ void send_last_message(pid_t* childIds, int numberOfPlayers,
         FILE** writeFile, FILE** readFile, int** pipesWrite, int** pipesRead,
         bool early);
 
+void handle_child(int id, char* currentPlayer, char* playersCountString,
+        FILE** writeFile, FILE** readFile,
+        int** pipesWrite, int** pipesRead);
+
+void handle_parent(int id, char* rawFile, FILE** writeFile, FILE** readFile,
+        int** pipesWrite, int** pipesRead);
+
 void initial_game(int numberOfPlayers, FILE** writeFile, FILE** readFile,
         int** pipesWrite, int** pipesRead, pid_t* childIds, char* rawFile,
         char** argv);
-
-void handle_end_of_child(pid_t* childIds, FILE** writeFile,
-        int numberOfPlayers);
 
 void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
         FILE** writeFile, FILE** readFile,

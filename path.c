@@ -59,9 +59,18 @@ char* get_type_char(const int* site) {
     return siteName;
 }
 
-void get_sites(Path* myPath, const char* tempSites,
-        const int* numberOfPlayers) {
-    char buffer[CHARS_OF_SITE + 1];
+SiteType get_site(Path* myPath, int i, const char* tempSites) {
+    SiteType site;
+    char buffer[CHARS_OF_SITE + 1];     
+    for (int j = 0; j < CHARS_OF_SITE; j++) {
+        buffer[j] = (tempSites + i)[j];
+    }
+    buffer[CHARS_OF_SITE] = '\0';
+    site = get_type_enum(buffer);
+    return site;
+}
+
+void get_sites(Path* myPath, const char* tempSites, int numberOfPlayers) {
     int numberOfSites = myPath->numberOfSites;
     int* availableCapacity = malloc(sizeof(int) * numberOfSites);
     int** sites = malloc(sizeof(int*) * numberOfSites);
@@ -73,28 +82,21 @@ void get_sites(Path* myPath, const char* tempSites,
     for (int i = 0; i < numberOfSites * CHARS_OF_SITE_AND_LIMIT; 
             i += CHARS_OF_SITE_AND_LIMIT) {
         int limitOfCurrentSite;
-        for (int j = 0; j < CHARS_OF_SITE; j++) {
-            buffer[j] = (tempSites + i)[j];
+        SiteType site = get_site(myPath, i, tempSites);
+        if (site == ERROR_TYPE) {
+            myPath->valid = false;
+            return;
         }
-        buffer[CHARS_OF_SITE] = '\0';
-        SiteType s = get_type_enum(buffer);
-
         // both first site and last site must be barrier
         if (i == 0 || i == numberOfSites * CHARS_OF_SITE_AND_LIMIT -
-                CHARS_OF_SITE_AND_LIMIT) {
-            if (s != BARRIER) {
+            CHARS_OF_SITE_AND_LIMIT) {
+            if (site != BARRIER) {
                 myPath->valid = false;
                 return;
             }
         }
-
-        if (s == ERROR_TYPE) {
-            myPath->valid = false;
-            return;
-        }
-        
         if (tempSites[i] == ':') {
-            limitOfCurrentSite = *numberOfPlayers;
+            limitOfCurrentSite = numberOfPlayers;
         } else {
             limitOfCurrentSite = tempSites[i + 2] - '0';
             if (limitOfCurrentSite < 0 || limitOfCurrentSite > 9) {
@@ -102,21 +104,19 @@ void get_sites(Path* myPath, const char* tempSites,
                 return;
             }
         }
-
         int* currentSiteAndCapacity = malloc(sizeof(int) * 2);
-        currentSiteAndCapacity[SITE] = s;
+        currentSiteAndCapacity[SITE] = site;
         currentSiteAndCapacity[CAPACITY] = limitOfCurrentSite;
         sites[position] = currentSiteAndCapacity;
         availableCapacity[position] = limitOfCurrentSite;
         position++;
-        // free(currentSiteAndCapacity);
     }
     myPath->availableCapacity = availableCapacity;
     myPath->valid = true;
     myPath->sites = sites;
 }
 
-void handle_path(FILE* pathFile, Path* myPath, const int* numberOfPlayers) {
+void handle_path(FILE* pathFile, Path* myPath, int numberOfPlayers) {
     int numberOfSites;
     int next;
 
@@ -154,7 +154,7 @@ void handle_path(FILE* pathFile, Path* myPath, const int* numberOfPlayers) {
     get_sites(myPath, rawSites, numberOfPlayers);
 }
 
-bool is_valid_path(char* path, Path* myPath, const int* numberOfPlayers) {
+bool is_valid_path(char* path, Path* myPath, int numberOfPlayers) {
     FILE* pathFile = fopen(path, "r");
     if (pathFile == NULL) {
         return false;
@@ -164,11 +164,11 @@ bool is_valid_path(char* path, Path* myPath, const int* numberOfPlayers) {
     return myPath->valid;
 }
 
-int nearest_barrier(Path* myPath, const int* currentPosition) {
+int nearest_barrier(Path* myPath, int currentPosition) {
     int* numberOfSites = &myPath->numberOfSites;
     int** sites = myPath->sites;
     int nearestBarrier;
-    for (int i = *currentPosition + 1; i < *numberOfSites; i++){
+    for (int i = currentPosition + 1; i < *numberOfSites; i++){
         int currentSite = sites[i][SITE];
         if (currentSite == BARRIER) {
             nearestBarrier = i;

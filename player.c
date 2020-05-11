@@ -82,7 +82,7 @@ int next_move_b(Path* myPath, Player* p, Participant* pa) {
     const int* moneys = pa->moneys;
     int id = p->playerId;
     int currentPos = pa->positions[id][1];
-    const int nearestBarrier = nearest_barrier(myPath, &currentPos);
+    const int nearestBarrier = nearest_barrier(myPath, currentPos);
     int nextMove;
     bool laterSite = true;
 
@@ -143,20 +143,20 @@ int next_move_a(Path* myPath, Player* p, Participant* pa) {
     int** sites = myPath->sites;
     const int* id = &p->playerId;
     const int* moneys = pa->moneys;
-    const int* currentPos = &pa->positions[*id][1];
+    const int currentPos = pa->positions[*id][1];
     const int nearestBarrier = nearest_barrier(myPath, currentPos);
     int nextMove;
 
     bool foundMo = false;
     bool foundOthers = false;
 
-    if (sites[*currentPos + 1][SITE] == get_type_enum("Mo") &&
-            pa->sizes[*currentPos + 1] < sites[*currentPos + 1][CAPACITY]) {
-        nextMove = *currentPos + 1;
+    if (sites[currentPos + 1][SITE] == get_type_enum("Mo") &&
+            pa->sizes[currentPos + 1] < sites[currentPos + 1][CAPACITY]) {
+        nextMove = currentPos + 1;
         foundMo = true;
     }
 
-    for (int i = *currentPos + 1; i <= nearestBarrier; i++) {
+    for (int i = currentPos + 1; i <= nearestBarrier; i++) {
         if (pa->sizes[i] < sites[i][CAPACITY]) { // check empty space
             if (sites[i][SITE] == get_type_enum("Do")) {
                 if ((moneys[*id] > 0)) {
@@ -176,31 +176,10 @@ int next_move_a(Path* myPath, Player* p, Participant* pa) {
     return nextMove;
 }
 
-bool get_hap(char* buffer, Path* myPath, Player* p, Participant* pa) {
-    int size = sizeof("HAP");
-    char temporaryString[size];
-    memcpy(temporaryString, buffer, size - 1);
-    temporaryString[size - 1] = '\0';
-    bool negativeMoneys = false;
-    const int numOfLetters = 5;
-
-
-    const int receivedId = 0;     // p
-    const int newPosition = 1;    // n
-    const int addPoint = 2;       // s
-    const int moneyChange = 3;    // m
-    const int receivedCard = 4;   // c
-
-    if (strcmp(temporaryString, "HAP")) { //if three first chars are "HAP"
-        return false;
-    }
-
-    // hapMessage does not inclus "HAP" in HAPp,n,s,m,c command
-    char* hapMessage = buffer + (size - 1);  // buffer + 3
+bool get_hap(int* hapInfo, int sizeOfArray, char* hapMessage, int addPoint,
+        bool* negativeMoneys) {
     char comma;
-    int hapInfo[5];
-
-    for (int i = 0; i < sizeof(hapInfo) / sizeof(int); i++) {
+    for (int i = 0; i < sizeOfArray; i++) {
         if (sscanf(hapMessage, "%d", &hapInfo[i]) != 1) {
             return false;
         }
@@ -210,11 +189,41 @@ bool get_hap(char* buffer, Path* myPath, Player* p, Participant* pa) {
             return false;
         }
         hapMessage += sizeof(comma);
-        // at third position, check whether next char is '-' or not
+        // at third position, check whether next char is minus (-) or not
         if (i == addPoint && hapMessage[0] == '-') {
             hapMessage += sizeof(char);
-            negativeMoneys = true;
+            *negativeMoneys = true;
         }
+    }
+    return true;
+}
+
+bool handle_hap(char* buffer, Path* myPath, Player* p, Participant* pa) {
+    int size = sizeof("HAP");
+    char temporaryString[size];
+    memcpy(temporaryString, buffer, size - 1);
+    temporaryString[size - 1] = '\0';
+    bool negativeMoneys = false;
+    const int numberOfLetters = 5;
+
+    const int receivedId = 0;     // p
+    const int newPosition = 1;    // n
+    const int addPoint = 2;       // s
+    const int moneyChange = 3;    // m
+    const int receivedCard = 4;   // c
+    const int sizeOfArray = 5;    // 0...4
+
+    if (strcmp(temporaryString, "HAP")) { //if three first chars are "HAP"
+        return false;
+    }
+
+    // hapMessage does not inclus "HAP" in HAPp,n,s,m,c command
+    char* hapMessage = buffer + (size - 1);  // buffer + 3
+    int hapInfo[sizeOfArray];
+
+    if (!get_hap(hapInfo, sizeOfArray, hapMessage, addPoint,
+            &negativeMoneys)) {
+        return false;
     }
 
     int id = hapInfo[receivedId];
@@ -223,7 +232,7 @@ bool get_hap(char* buffer, Path* myPath, Player* p, Participant* pa) {
 
     if (id >= pa->numberOfPlayers ||
             toPosition >= myPath->numberOfSites ||
-            card < 0 || card > numOfLetters) {
+            card < 0 || card > numberOfLetters) {
         return false;
     }
 
@@ -258,7 +267,7 @@ void handle_input(Path* myPath, Player* p, Participant* pa, char playerType) {
                 // Game ened normally
                 break;
             } else {
-                if (!get_hap(buffer, myPath, p, pa)) {
+                if (!handle_hap(buffer, myPath, p, pa)) {
                     exit(handle_player_errors(COMMUNICATION_PLAYER));
                 }
             }
@@ -276,7 +285,7 @@ bool get_path(Path* myPath, Player* p, Participant* pa) {
     printf("^");
     fflush(stdout);
 
-    handle_path(stdin, myPath, &pa->numberOfPlayers);
+    handle_path(stdin, myPath, pa->numberOfPlayers);
 
     if (myPath->valid) {
         set_up(myPath, pa);

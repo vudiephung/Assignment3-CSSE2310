@@ -37,10 +37,10 @@ typedef struct Path {
 
 SiteType get_type_enum(const char* site);
 char* get_type_char(const int* site);
-void get_sites(Path* myPath, const char* tempSites,
-        const int* numberOfPlayers);
-void handle_path(FILE* pathFile, Path* myPath, const int* numberOfPlayers);
-bool is_valid_path(char* path, Path* myPath, const int* numberOfPlayers);
-int nearest_barrier(Path* myPath, const int* currentPosition);
+SiteType get_site(Path* myPath, int i, const char* tempSites);
+void get_sites(Path* myPath, const char* tempSites, int numberOfPlayers);
+void handle_path(FILE* pathFile, Path* myPath, int numberOfPlayers);
+bool is_valid_path(char* path, Path* myPath, int numberOfPlayers);
+int nearest_barrier(Path* myPath, int currentPosition);
 
 #endif
