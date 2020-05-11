@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <signal.h>
 #include "game.h"
 #include "errors.h"
 #include "path.h"
@@ -20,13 +21,13 @@ void sigchild_handler(int s) {
 }
 
 void calc_next_turn(Path* myPath, Participant* pa) {
-    int* numberOfSites = &myPath->numberOfSites;
-    int* numberOfPlayer = &pa->numberOfPlayers;
+    int numberOfSites = myPath->numberOfSites;
+    int numberOfPlayer = pa->numberOfPlayers;
     int** positions = pa->positions;
     int* nextTurn = &pa->nextTurn;
 
-    for (int site = 0; site < *numberOfSites; site++) {
-        for (int id = 0; id < *numberOfPlayer; id++) {
+    for (int site = 0; site < numberOfSites; site++) {
+        for (int id = 0; id < numberOfPlayer; id++) {
             if (positions[id][0] == pa->sizes[site] - 1 &&
                     positions[id][1] == site) {
                 *nextTurn = id;
@@ -87,20 +88,19 @@ void set_up(Path* myPath, Participant* pa) {
     pa->sizes = sizes;
 }
 
-// int is_valid_move(Path* myPath, Participant* pa,
-//         const int playerId, const int toPosition) {
-//     int* currentPosition = &pa->positions[playerId][1];
-//     int closestBarrier = nearest_barrier(myPath, currentPosition);
-//     int nextSize = pa->sizes[toPosition];
-//     int nextCap = myPath->sites[toPosition][CAPACITY];
+int is_valid_move(Path* myPath, Participant* pa,
+        const int playerId, const int toPosition) {
+    int currentPosition = pa->positions[playerId][1];
+    int closestBarrier = nearest_barrier(myPath, currentPosition);
+    int nextSize = pa->sizes[toPosition];
+    int nextCap = myPath->sites[toPosition][CAPACITY];
 
-//     return (toPosition <= closestBarrier) && (nextSize < nextCap) &&
-//             (toPosition > *currentPosition);
-// }
+    return (toPosition <= closestBarrier) && (nextSize < nextCap) &&
+            (toPosition > currentPosition);
+}
 
 void handle_move(FILE* file, Deck* myDeck, Path* myPath, Participant* pa,
         int playerId, const int toPosition) {
-    //position:
     int** positions = pa->positions;
     int* currentPosition = &positions[playerId][1];
     int* currentRow = &positions[playerId][0];
@@ -110,7 +110,7 @@ void handle_move(FILE* file, Deck* myDeck, Path* myPath, Participant* pa,
     pa->pointChange[playerId] = 0;
     pa->moneyChange[playerId] = 0;
 
-    if (file == stdout) { // dealer  !!!!!!!!!!!!!!!!!!!!
+    if (file == stdout) { // dealer
         if (nextSite == MONEY) {
             *playerMoney += 3;
             pa->moneyChange[playerId] = 3;
@@ -150,7 +150,7 @@ void display_sites(FILE* file, Path* myPath) {
     int* numberOfSites = &myPath->numberOfSites;
     int** sites = myPath->sites;
     for (int i = 0; i < *numberOfSites; i++) {
-        char* currentSite = get_type_char(&sites[i][SITE]);
+        char* currentSite = get_type_char(sites[i][SITE]);
         fprintf(file, "%s ", currentSite);
         fflush(file);
     }
@@ -235,9 +235,9 @@ bool is_end_game(Path* myPath, Participant* pa) {
 void calc_scores(FILE* file, Participant* pa) {
     int** cards = pa->cards;
     int* points = pa->points;
-    int* numberOfPlayers = &pa->numberOfPlayers;
+    int numberOfPlayers = pa->numberOfPlayers;
     fprintf(file, "Scores: ");
-    for (int id = 0; id < *numberOfPlayers; id++) {
+    for (int id = 0; id < numberOfPlayers; id++) {
         // Add V1,V2 scores
         pa->points[id] += (pa->v1[id] + pa->v2[id]);
         // Add scores by collecting cards
@@ -257,7 +257,7 @@ void calc_scores(FILE* file, Participant* pa) {
         }
         // Print Scores:
         fprintf(file, "%d", points[id]);
-        if (id != *numberOfPlayers - 1) {
+        if (id != numberOfPlayers - 1) {
             fprintf(file, ",");
         } else {
             fprintf(file, "\n");
@@ -298,6 +298,14 @@ void send_last_message(pid_t* childIds, int numberOfPlayers,
         close_pipes_and_files(id, pipesWrite, pipesRead, writeFile, readFile);
     }
 
+    // reap again in case of the players cannot get messsage from dealers
+    for (int i = 0; i < numberOfPlayers; i++) {
+        if (childIds[i] > 0) {
+            kill(childIds[i], SIGKILL);
+            waitpid(childIds[i], 0, WNOHANG);
+        }
+    }
+
     if (early) {
         exit(handle_error_message(COMMUNICATION));
     }
@@ -329,7 +337,7 @@ void handle_child(int id, char* currentPlayer, char* playersCountString,
     free(playerIdString);
 }
 
-void handle_parent(int id, char* rawFile, FILE** writeFile, FILE** readFile,
+void handle_parent(int id, char* rawPath, FILE** writeFile, FILE** readFile,
         int** pipesWrite, int** pipesRead) {
     close(pipesWrite[id][READ_END]);
     close(pipesRead[id][WRITE_END]);
@@ -337,13 +345,12 @@ void handle_parent(int id, char* rawFile, FILE** writeFile, FILE** readFile,
     readFile[id] = fdopen(pipesRead[id][READ_END], "r");
 
     // Read '^'
-    fflush(stdout);
     char msg = (char)(fgetc(readFile[id]));
     fflush(stdout);
 
     if (msg == '^') {
         // send path
-        fprintf(writeFile[id], "%s", rawFile);
+        fprintf(writeFile[id], "%s", rawPath);
         fflush(writeFile[id]);
     } else {
         exit(handle_error_message(STARTING_PROCESS));
@@ -351,7 +358,7 @@ void handle_parent(int id, char* rawFile, FILE** writeFile, FILE** readFile,
 }
 
 void initial_game(int numberOfPlayers, FILE** writeFile, FILE** readFile,
-        int** pipesWrite, int** pipesRead, pid_t* childIds, char* rawFile,
+        int** pipesWrite, int** pipesRead, pid_t* childIds, char* rawPath,
         char** argv) {
     int playerPosition = 3; // first position of executable program is 3
     char* playersCountString = number_to_string(numberOfPlayers); // "2"
@@ -373,7 +380,7 @@ void initial_game(int numberOfPlayers, FILE** writeFile, FILE** readFile,
             handle_child(id, currentPlayer, playersCountString, writeFile,
                     readFile, pipesWrite, pipesRead);
         } else { // Parent
-            handle_parent(id, rawFile, writeFile, readFile, pipesWrite,
+            handle_parent(id, rawPath, writeFile, readFile, pipesWrite,
                     pipesRead);
         }
     }
@@ -403,12 +410,15 @@ void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
         int read = fscanf(readFile[pa->nextTurn], "%c%c%d%c", &firstLetter,
                 &secondLetter, &(pa->nextMove)[pa->nextTurn], &newLine);
         // check whether message follows formar "DO" + site + '\n or not
-        if (read != 4 || firstLetter != 'D' || secondLetter != 'O' ||
-                pa->nextMove[pa->nextTurn] > myPath->numberOfSites ||
-                newLine != '\n') { // Comms error
+        if (read != 4 || firstLetter != 'D' ||
+                secondLetter != 'O' ||
+                newLine != '\n' ||
+                !is_valid_move(myPath, pa, pa->nextTurn,
+                        pa->nextMove[pa->nextTurn])) { // Comms error
             send_last_message(childIds, numberOfPlayers, writeFile, readFile,
                     pipesWrite, pipesRead, true);
         }
+
         handle_move(stdout, myDeck, myPath, pa,
                 pa->nextTurn, (pa->nextMove)[pa->nextTurn]);
 
@@ -437,7 +447,7 @@ void run_game(Deck* myDeck, Path* myPath, Participant* pa, char** argv) {
     set_up(myPath, pa);
     
     int numberOfPlayers = pa->numberOfPlayers; // 2 (int)
-    char* rawFile = myPath->rawFile;
+    char* rawPath = myPath->rawPath;
     FILE** writeFile = malloc(sizeof(FILE*) * numberOfPlayers);
     FILE** readFile = malloc(sizeof(FILE*) * numberOfPlayers);
     int** pipesRead = malloc(sizeof(int*) * numberOfPlayers);
@@ -445,7 +455,7 @@ void run_game(Deck* myDeck, Path* myPath, Participant* pa, char** argv) {
     pid_t childIds[numberOfPlayers];
 
     initial_game(numberOfPlayers, writeFile, readFile,
-            pipesWrite, pipesRead, childIds, rawFile, argv);
+            pipesWrite, pipesRead, childIds, rawPath, argv);
 
     communicate(myDeck, myPath, pa, childIds, writeFile, readFile,
             pipesWrite, pipesRead);

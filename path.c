@@ -13,57 +13,53 @@ SiteType get_type_enum(const char* site) {
     //Mo, V1, V2, Do, Ri, ::                                                                        
     if (!strcmp(site, "Mo")) {
         return MONEY;
-    }
-    if (!strcmp(site, "V1")) {
+    } else if (!strcmp(site, "V1")) {
         return V1;
-    }
-    if (!strcmp(site, "V2")) {
+    } else if (!strcmp(site, "V2")) {
         return V2;
-    }
-    if (!strcmp(site, "Do")) {
+    } else if (!strcmp(site, "Do")) {
         return MONEY_2_POINT;
-    }
-    if (!strcmp(site, "Ri")) {
+    } else if (!strcmp(site, "Ri")) {
         return DRAW_NEXT_CARD;
-    }
-    if (!strcmp(site, "::")) {
+    } else if (!strcmp(site, "::")) {
         return BARRIER;
+    } else {
+        return ERROR_TYPE;
     }
-    return ERROR_TYPE;
 }
 
-char* get_type_char(const int* site) {
+char* get_type_char(SiteType site) {
     char* siteName = "";
-    switch (*site) {
-    case MONEY:
-        siteName = "Mo";
-        break;
-    case V1:
-        siteName = "V1";
-        break;
-    case V2:
-        siteName = "V2";
-        break;
-    case MONEY_2_POINT:
-        siteName = "Do";
-        break;
-    case DRAW_NEXT_CARD:
-        siteName = "Ri";
-        break;
-    case BARRIER:
-        siteName = "::";
-        break; 
-    default:
-        break;
+    switch (site) {
+        case MONEY:
+            siteName = "Mo";
+            break;
+        case V1:
+            siteName = "V1";
+            break;
+        case V2:
+            siteName = "V2";
+            break;
+        case MONEY_2_POINT:
+            siteName = "Do";
+            break;
+        case DRAW_NEXT_CARD:
+            siteName = "Ri";
+            break;
+        case BARRIER:
+            siteName = "::";
+            break; 
+        default:
+            break;
     }
     return siteName;
 }
 
-SiteType get_site(Path* myPath, int i, const char* tempSites) {
+SiteType get_site(Path* myPath, int position, const char* tempSites) {
     SiteType site;
     char buffer[CHARS_OF_SITE + 1];     
     for (int j = 0; j < CHARS_OF_SITE; j++) {
-        buffer[j] = (tempSites + i)[j];
+        buffer[j] = (tempSites + position)[j];
     }
     buffer[CHARS_OF_SITE] = '\0';
     site = get_type_enum(buffer);
@@ -77,28 +73,28 @@ void get_sites(Path* myPath, const char* tempSites, int numberOfPlayers) {
     for (int i = 0; i < numberOfSites; i++) {
         sites[i] = malloc (sizeof(int) * 2);
     }
-    int position = 0;
+    int count = 0;
         
-    for (int i = 0; i < numberOfSites * CHARS_OF_SITE_AND_LIMIT; 
-            i += CHARS_OF_SITE_AND_LIMIT) {
+    for (int position = 0; position < numberOfSites * CHARS_OF_SITE_AND_LIMIT; 
+            position += CHARS_OF_SITE_AND_LIMIT) {
         int limitOfCurrentSite;
-        SiteType site = get_site(myPath, i, tempSites);
+        SiteType site = get_site(myPath, position, tempSites);
         if (site == ERROR_TYPE) {
             myPath->valid = false;
             return;
         }
         // both first site and last site must be barrier
-        if (i == 0 || i == numberOfSites * CHARS_OF_SITE_AND_LIMIT -
+        if (position == 0 || position == numberOfSites * CHARS_OF_SITE_AND_LIMIT -
             CHARS_OF_SITE_AND_LIMIT) {
             if (site != BARRIER) {
                 myPath->valid = false;
                 return;
             }
         }
-        if (tempSites[i] == ':') {
+        if (tempSites[position] == ':') {
             limitOfCurrentSite = numberOfPlayers;
         } else {
-            limitOfCurrentSite = tempSites[i + 2] - '0';
+            limitOfCurrentSite = tempSites[position + 2] - '0';
             if (limitOfCurrentSite < 0 || limitOfCurrentSite > 9) {
                 myPath->valid = false;
                 return;
@@ -107,9 +103,9 @@ void get_sites(Path* myPath, const char* tempSites, int numberOfPlayers) {
         int* currentSiteAndCapacity = malloc(sizeof(int) * 2);
         currentSiteAndCapacity[SITE] = site;
         currentSiteAndCapacity[CAPACITY] = limitOfCurrentSite;
-        sites[position] = currentSiteAndCapacity;
-        availableCapacity[position] = limitOfCurrentSite;
-        position++;
+        sites[count] = currentSiteAndCapacity;
+        availableCapacity[count] = limitOfCurrentSite;
+        count++;
     }
     myPath->availableCapacity = availableCapacity;
     myPath->valid = true;
@@ -121,7 +117,6 @@ void handle_path(FILE* pathFile, Path* myPath, int numberOfPlayers) {
     int next;
 
     fscanf(pathFile, "%d", &numberOfSites);
-    // printf("Number: %d\n", numberOfSites);
     if (numberOfSites < 2 || fgetc(pathFile) != ';') {
         myPath->valid = false;
         return;
@@ -147,7 +142,7 @@ void handle_path(FILE* pathFile, Path* myPath, int numberOfPlayers) {
         rawPath[i] = (char)next;
     }
 
-    myPath->rawFile = rawPath;
+    myPath->rawPath = rawPath;
 
     // rawSites does not include numberOfSites and ';'
     char* rawSites = rawPath + digitsCount + 1;

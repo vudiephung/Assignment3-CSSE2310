@@ -1,7 +1,7 @@
 #include "errors.h"
 #include <stdio.h>
 
-Errors handle_error_message(Errors type) {
+Error handle_error_message(Error type) {
     const char* errorMessage = "";
     switch (type) {
         case OK:
@@ -24,12 +24,11 @@ Errors handle_error_message(Errors type) {
         default:
             break;
     }
-
     fprintf(stderr, "%s\n", errorMessage);
     return type;
 }
 
-Errors handle_player_errors(Errors type) {
+Error handle_player_errors(Error type) {
     const char* errorMessage = "";
     switch (type) {
         case OK:

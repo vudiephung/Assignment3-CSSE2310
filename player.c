@@ -176,10 +176,10 @@ int next_move_a(Path* myPath, Player* p, Participant* pa) {
     return nextMove;
 }
 
-bool get_hap(int* hapInfo, int sizeOfArray, char* hapMessage, int addPoint,
+bool get_hap(int* hapInfo, int arrayLength, char* hapMessage, int addPoint,
         bool* negativeMoneys) {
     char comma;
-    for (int i = 0; i < sizeOfArray; i++) {
+    for (int i = 0; i < arrayLength; i++) {
         if (sscanf(hapMessage, "%d", &hapInfo[i]) != 1) {
             return false;
         }
@@ -211,7 +211,7 @@ bool handle_hap(char* buffer, Path* myPath, Player* p, Participant* pa) {
     const int addPoint = 2;       // s
     const int moneyChange = 3;    // m
     const int receivedCard = 4;   // c
-    const int sizeOfArray = 5;    // 0...4
+    const int arrayLength = 5;    // 0...4
 
     if (strcmp(temporaryString, "HAP")) { //if three first chars are "HAP"
         return false;
@@ -219,9 +219,9 @@ bool handle_hap(char* buffer, Path* myPath, Player* p, Participant* pa) {
 
     // hapMessage does not inclus "HAP" in HAPp,n,s,m,c command
     char* hapMessage = buffer + (size - 1);  // buffer + 3
-    int hapInfo[sizeOfArray];
+    int hapInfo[arrayLength];
 
-    if (!get_hap(hapInfo, sizeOfArray, hapMessage, addPoint,
+    if (!get_hap(hapInfo, arrayLength, hapMessage, addPoint,
             &negativeMoneys)) {
         return false;
     }

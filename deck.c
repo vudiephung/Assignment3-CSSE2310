@@ -3,21 +3,21 @@
 
 CardType get_card_enum(const char card) {                                                                       
     if (card == 'A') {
-        return A;
+        return CARD_A;
     }
     if (card == 'B') {
-        return B;
+        return CARD_B;
     }
     if (card == 'C') {
-        return C;
+        return CARD_C;
     }
     if (card == 'D') {
-        return D;
+        return CARD_D;
     }
     if (card == 'E') {
-        return E;
+        return CARD_E;
     }
-    return ERROR_CARD;
+    return CARD_ERROR;
 }
 
 void handle_deck(FILE* deckFile, Deck *myDeck) {
