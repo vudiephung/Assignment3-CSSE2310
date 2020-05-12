@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include "deck.h"
 
-CardType get_card_enum(const char card) {                                                                       
+CardType get_card_enum(const char card) {
     if (card == 'A') {
         return CARD_A;
     }
@@ -20,7 +20,7 @@ CardType get_card_enum(const char card) {
     return CARD_ERROR;
 }
 
-void handle_deck(FILE* deckFile, Deck *myDeck) {
+void handle_deck(FILE* deckFile, Deck* myDeck) {
     int next = 0;
     int numberOfCards;
     fscanf(deckFile, "%d", &numberOfCards);

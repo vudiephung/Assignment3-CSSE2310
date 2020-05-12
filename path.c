@@ -9,8 +9,8 @@
 #define CHARS_OF_SITE 2 // e.g: Mo has 2 chars
 #define CHARS_OF_SITE_AND_LIMIT 3 // e.g: Mo3 ::- has 3 chars
 
-SiteType get_type_enum(const char* site) {     
-    //Mo, V1, V2, Do, Ri, ::                                                                        
+SiteType get_type_enum(const char* site) {
+    //Mo, V1, V2, Do, Ri, ::
     if (!strcmp(site, "Mo")) {
         return MONEY;
     } else if (!strcmp(site, "V1")) {
@@ -71,7 +71,7 @@ void get_sites(Path* myPath, const char* tempSites, int numberOfPlayers) {
     int* availableCapacity = malloc(sizeof(int) * numberOfSites);
     int** sites = malloc(sizeof(int*) * numberOfSites);
     for (int i = 0; i < numberOfSites; i++) {
-        sites[i] = malloc (sizeof(int) * 2);
+        sites[i] = malloc(sizeof(int) * 2);
     }
     int count = 0;
         
@@ -84,8 +84,8 @@ void get_sites(Path* myPath, const char* tempSites, int numberOfPlayers) {
             return;
         }
         // both first site and last site must be barrier
-        if (position == 0 || position == numberOfSites * CHARS_OF_SITE_AND_LIMIT -
-            CHARS_OF_SITE_AND_LIMIT) {
+        if (position == 0 || position == numberOfSites *
+                CHARS_OF_SITE_AND_LIMIT - CHARS_OF_SITE_AND_LIMIT) {
             if (site != BARRIER) {
                 myPath->valid = false;
                 return;
@@ -161,7 +161,7 @@ int nearest_barrier(Path* myPath, int currentPosition) {
     int* numberOfSites = &myPath->numberOfSites;
     int** sites = myPath->sites;
     int nearestBarrier;
-    for (int i = currentPosition + 1; i < *numberOfSites; i++){
+    for (int i = currentPosition + 1; i < *numberOfSites; i++) {
         int currentSite = sites[i][SITE];
         if (currentSite == BARRIER) {
             nearestBarrier = i;

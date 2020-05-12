@@ -14,7 +14,7 @@ void sighub_handler(int s) {
     wait(NULL);
 }
 
-int main(int argc, char** argv){
+int main(int argc, char** argv) {
     struct sigaction sighubAction;
     memset(&sighubAction, 0, sizeof(struct sigaction));
     sighubAction.sa_handler = sighub_handler;
