@@ -14,8 +14,10 @@
 #include "participants.h"
 #include "deck.h"
 
+// global variable to change when receive SIGCHILD
 bool endOfChild = false;
 
+// function handler when receive SIGCHILD
 void sigchild_handler(int s) {
     endOfChild = true;
 }
@@ -87,8 +89,8 @@ void set_up(Path* myPath, Participant* pa) {
     pa->sizes = sizes;
 }
 
-int is_valid_move(Path* myPath, Participant* pa,
-        const int playerId, const int toPosition) {
+bool is_valid_move(Path* myPath, Participant* pa,
+        const int playerId, int toPosition) {
     int currentPosition = pa->positions[playerId][1];
     int closestBarrier = nearest_barrier(myPath, currentPosition);
     int nextSize = pa->sizes[toPosition];

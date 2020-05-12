@@ -39,10 +39,6 @@ int next_move_b(Path* myPath, Player* p, Participant* pa);
 // return the next position based on the strategy of Player A
 int next_move_a(Path* myPath, Player* p, Participant* pa);
 
-// print '^', handle the path. If path file is valid, set up the variables
-// and return false if the path is invalid and otherwise
-bool get_path(Path* myPath, Player* p, Participant* pa);
-
 // Args: hapInfo: array of type int saves the read information from HAP
 // message. e.g: hapInfo[0] = p, hapInfo[1] = n .... hapInfo[4] = c
 // arrayLength: legnth of hapInfo = 5;
@@ -65,5 +61,9 @@ bool handle_hap(char* buffer, Path* myPath, Player* p, Participant* pa);
 // Print the score of the game if get "DONE" from stdin
 void handle_input(Path* myPath, Player* p, Participant* pa,
         char playerType);
+
+// print '^', handle the path. If path file is valid, set up the variables
+// and return false if the path is invalid and otherwise
+bool get_path(Path* myPath, Player* p, Participant* pa);
 
 #endif

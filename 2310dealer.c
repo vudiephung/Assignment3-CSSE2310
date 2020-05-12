@@ -9,8 +9,9 @@
 #include "errors.h"
 #include "game.h"
 
+// function handler when receive SIGHUB
 void sighub_handler(int s) {
-    kill(-1 * (getpid()), SIGKILL);
+    kill(-getpid(), SIGKILL);
     wait(NULL);
 }
 

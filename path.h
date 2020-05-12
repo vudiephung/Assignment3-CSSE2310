@@ -56,9 +56,9 @@ char* get_type_char(SiteType site);
 // return 3
 SiteType get_site(Path* myPath, int position, const char* tempSites);
 
-// In this function, malloc myPath->sites variables, loop through the
+// In this function, loop through the
 // tempSites variable (explained above) with index += 3.
-// In each loop: Check if: first and last positions are barrier
+// In each loop: Check if first and last positions are barrier
 // The given site is valid or not
 // If not, set myPath->valid = false and return
 // Otherwise, set the capacity of each site if valid (0 < cap < 10).

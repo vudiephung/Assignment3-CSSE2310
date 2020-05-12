@@ -21,6 +21,10 @@ void calc_next_turn(Path* myPath, Participant* pa);
 // players are 0 and 7 respectively, etc
 void set_up(Path* myPath, Participant* p);
 
+// return true iff given playerId want to move to toPosition is valid
+bool is_valid_move(Path* myPath, Participant* pa, const int playerId,
+        int toPosition);
+
 // This function is used for both dealer and player, based on given File* file
 // to handle with playerId move to which position
 // if dealer: file == stdout, dealer will check the type of the

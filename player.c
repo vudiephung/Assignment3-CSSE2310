@@ -31,7 +31,7 @@ void errros_handler(int argc, char** argv, Path* myPath,
     }
 }
 
-// Helper function of most_cards_owner to find one player who has most of
+// Helper function of most_cards_owner() to find one player who has most of
 // the cards, return -1 iff there are at least 2 players have the same highest
 // number of cards
 int find_index_of_max(int* array, int size) {
@@ -282,7 +282,6 @@ void handle_input(Path* myPath, Player* p, Participant* pa, char playerType) {
     free(buffer);
 }
 
-// Handle Path
 bool get_path(Path* myPath, Player* p, Participant* pa) {
     printf("^");
     fflush(stdout);
@@ -292,6 +291,5 @@ bool get_path(Path* myPath, Player* p, Participant* pa) {
     if (myPath->valid) {
         set_up(myPath, pa);
     }
-
     return myPath->valid;
 }
