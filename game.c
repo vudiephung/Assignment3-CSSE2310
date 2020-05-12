@@ -28,9 +28,13 @@ void calc_next_turn(Path* myPath, Participant* pa) {
     int** positions = pa->positions;
     int* nextTurn = &pa->nextTurn;
 
+    // left to right
     for (int site = 0; site < numberOfSites; site++) {
+        // bottom to top
         for (int id = 0; id < numberOfPlayer; id++) {
+            // if the player is at bottom position
             if (positions[id][0] == pa->sizes[site] - 1 &&
+                    // site of that player is the current site
                     positions[id][1] == site) {
                 *nextTurn = id;
                 return;
@@ -160,15 +164,15 @@ void display_sites(FILE* file, Path* myPath) {
 }
 
 void display_player_position(FILE* file, Path* myPath, Participant* pa) {
-    int* numberOfSites = &myPath->numberOfSites;
-    int* numberOfPlayers = &pa->numberOfPlayers;
+    int numberOfSites = myPath->numberOfSites;
+    int numberOfPlayers = pa->numberOfPlayers;
     int** positions = pa->positions;
 
-    int largestSize = find_max(pa->sizes, *numberOfSites, NULL);
+    int largestSize = find_max(pa->sizes, numberOfSites, NULL);
     for (int id = 0; id < largestSize; id++) {
-        for (int site = 0; site < *numberOfSites; site++) {
+        for (int site = 0; site < numberOfSites; site++) {
             bool found = false;
-            for (int i = 0; i < *numberOfPlayers; i++) {
+            for (int i = 0; i < numberOfPlayers; i++) {
                 if (positions[i][0] == id && positions[i][1] == site) {
                     fprintf(file, "%d", i);
                     switch (count_number_digit(i)) {
@@ -182,7 +186,7 @@ void display_player_position(FILE* file, Path* myPath, Participant* pa) {
                             break; // i >= 100
                     }
                     fflush(stdout);
-                    if (site == *numberOfSites - 1) {
+                    if (site == numberOfSites - 1) {
                         fprintf(file, "\n");
                     }
                     found = true;
@@ -194,7 +198,7 @@ void display_player_position(FILE* file, Path* myPath, Participant* pa) {
             }
             fprintf(file, "   ");
             fflush(stdout);
-            if (site == *numberOfSites - 1) {
+            if (site == numberOfSites - 1) {
                 fprintf(file, "\n");
             }
         }
@@ -243,12 +247,14 @@ void calc_scores(FILE* file, Participant* pa) {
         // Add V1,V2 scores
         pa->points[id] += (pa->siteV1[id] + pa->siteV2[id]);
         // Add scores by collecting cards
-        int maxPointsOfASet = 10;
+        int maxPointsOfASet = 10; // Set of 5 cards
         bubble_sort(cards[id], NUM_A_TO_E);
         for (int i = 0; i < NUM_A_TO_E; i++) {
             int pointsChange;
             if (i == 0) {
+                // After the arrays is sorted, get the min * 10
                 pointsChange = cards[id][i] * maxPointsOfASet;
+                // maxPoint then equals to 7
                 maxPointsOfASet -= 3;
             } else {
                 pointsChange = (cards[id][i] - cards[id][i - 1]) *
@@ -282,13 +288,16 @@ void send_last_message(pid_t* childIds, int numberOfPlayers,
         bool early) {
     const int emptyValue = -1;
     pid_t pid;
+    // Wait NOHANG for the child (In case the child is termintaed by signal)
     while (pid = waitpid(-1, 0, WNOHANG), pid > 0) {
         for (int i = 0; i < numberOfPlayers; i++) {
             if (childIds[i] == pid) {
+                // Change the pid of terminated child into -1 in the array
                 childIds[i] = emptyValue;
             }
         }
     }
+    // Only send message to the "alive" ones to prevent SIGPIPE
     for (int id = 0; id < numberOfPlayers && childIds[id] != -1; id++) {
         if (early) {
             fprintf(writeFile[id], "EARLY\n");
@@ -355,6 +364,7 @@ void handle_parent(int id, char* rawPath, FILE** writeFile, FILE** readFile,
 void initial_game(int numberOfPlayers, FILE** writeFile, FILE** readFile,
         int** pipesWrite, int** pipesRead, pid_t* childIds, char* rawPath,
         char** argv) {
+    // e.g: ./2310dealer d1.deck p1.path ./2310A ./2310A
     int playerPosition = 3; // first position of executable program is 3
     char* playersCountString = number_to_string(numberOfPlayers); // "2"
     for (int id = 0; id < numberOfPlayers; id++) {
@@ -404,7 +414,7 @@ void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
         // Read DO
         int read = fscanf(readFile[pa->nextTurn], "%c%c%d%c", &firstLetter,
                 &secondLetter, &(pa->nextMove)[pa->nextTurn], &newLine);
-        // check whether message follows formar "DO" + site + '\n or not
+        // check whether message follows formar "DO" + site + '\n' or not
         if (read != 4 || firstLetter != 'D' || secondLetter != 'O' ||
                 newLine != '\n' || !is_valid_move(myPath, pa, pa->nextTurn,
                 pa->nextMove[pa->nextTurn])) { // Comms error

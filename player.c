@@ -213,7 +213,7 @@ bool handle_hap(char* buffer, Path* myPath, Player* p, Participant* pa) {
     const int addPoint = 2;       // s
     const int moneyChange = 3;    // m
     const int receivedCard = 4;   // c
-    const int arrayLength = 5;    // 0...4
+    const int arrayLength = 5;    // p...c
 
     if (strcmp(temporaryString, "HAP")) { //if three first chars are "HAP"
         return false;

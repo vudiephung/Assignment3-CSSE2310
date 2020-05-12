@@ -130,7 +130,7 @@ void handle_path(FILE* pathFile, Path* myPath, int numberOfPlayers) {
 
     char* rawPath = malloc(sizeof(char) * (sizeOfPath + 1));
     int pos = digitsCount - 1;
-    while(numberOfSites) {
+    while (numberOfSites) {
         rawPath[pos--] = (numberOfSites % 10) + '0';
         numberOfSites /= 10;
     }
@@ -162,8 +162,7 @@ int nearest_barrier(Path* myPath, int currentPosition) {
     int** sites = myPath->sites;
     int nearestBarrier;
     for (int i = currentPosition + 1; i < *numberOfSites; i++) {
-        int currentSite = sites[i][SITE];
-        if (currentSite == BARRIER) {
+        if (sites[i][SITE] == BARRIER) {
             nearestBarrier = i;
             break;
         }
