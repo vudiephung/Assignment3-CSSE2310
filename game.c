@@ -301,14 +301,6 @@ void send_last_message(pid_t* childIds, int numberOfPlayers,
         close_pipes_and_files(id, pipesWrite, pipesRead, writeFile, readFile);
     }
 
-    // reap again in case of the players cannot get messsage from dealers
-    for (int i = 0; i < numberOfPlayers; i++) {
-        if (childIds[i] > 0) {
-            kill(childIds[i], SIGKILL);
-            waitpid(childIds[i], 0, WNOHANG);
-        }
-    }
-
     if (early) {
         exit(handle_error_message(COMMUNICATION));
     }
