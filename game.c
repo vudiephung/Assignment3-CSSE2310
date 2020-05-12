@@ -411,11 +411,9 @@ void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
         int read = fscanf(readFile[pa->nextTurn], "%c%c%d%c", &firstLetter,
                 &secondLetter, &(pa->nextMove)[pa->nextTurn], &newLine);
         // check whether message follows formar "DO" + site + '\n or not
-        if (read != 4 || firstLetter != 'D' ||
-                secondLetter != 'O' ||
-                newLine != '\n' ||
-                !is_valid_move(myPath, pa, pa->nextTurn,
-                        pa->nextMove[pa->nextTurn])) { // Comms error
+        if (read != 4 || firstLetter != 'D' || secondLetter != 'O' ||
+                newLine != '\n' || !is_valid_move(myPath, pa, pa->nextTurn,
+                pa->nextMove[pa->nextTurn])) { // Comms error
             send_last_message(childIds, numberOfPlayers, writeFile, readFile,
                     pipesWrite, pipesRead, true);
         }

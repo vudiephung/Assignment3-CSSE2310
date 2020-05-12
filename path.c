@@ -1,10 +1,10 @@
+#include <stdlib.h>
+#include <string.h>
 #include "path.h"
 #include "game.h"
 #include "participants.h"
 #include "player.h"
 #include "utils.h"
-#include "stdlib.h"
-#include "string.h"
 
 #define CHARS_OF_SITE 2 // e.g: Mo has 2 chars
 #define CHARS_OF_SITE_AND_LIMIT 3 // e.g: Mo3 ::- has 3 chars

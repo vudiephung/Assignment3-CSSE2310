@@ -75,16 +75,13 @@ int most_cards_owner(Participant* pa, bool* noCardsFound) {
     return owner;
 }
 
-// Strategy B
-int next_move_b(Path* myPath, Player* p, Participant* pa) {
-    int** sites = myPath->sites;
-    int** positions = pa->positions;
-    const int* moneys = pa->moneys;
-    int id = p->playerId;
+int strategy_b_others(Path* myPath, Participant* pa, int id) {
+    // other cases
     int currentPos = pa->positions[id][1];
-    const int nearestBarrier = nearest_barrier(myPath, currentPos);
+    int nearestBarrier = nearest_barrier(myPath, currentPos);
+    int** sites = myPath->sites;
+    const int* moneys = pa->moneys;
     int nextMove;
-    bool laterSite = true;
 
     bool noCardsFound = true;
     int mostCardsOwner = most_cards_owner(pa, &noCardsFound);
@@ -92,26 +89,6 @@ int next_move_b(Path* myPath, Player* p, Participant* pa) {
     bool foundV2 = false;
     bool foundOthers = false;
 
-    // next site is barrier
-    if (sites[currentPos + 1][SITE] == get_type_enum("::")) {
-        return currentPos + 1;
-    }
-
-    // next site is not full
-    if (pa->sizes[currentPos + 1] < sites[currentPos + 1][CAPACITY]) {
-        // all of others players are on the later sites
-        for (int i = 0; i < pa->numberOfPlayers; i++) {
-            if (i != id && positions[i][1] <= currentPos) {
-                laterSite = false;
-                break;
-            }
-        }
-        if (laterSite == true) {
-            return currentPos + 1;
-        }
-    }
-
-    // other cases
     for (int i = currentPos + 1; i <= nearestBarrier; i++) {
         if (pa->sizes[i] < sites[i][CAPACITY]) {
             if (sites[i][SITE] == get_type_enum("Mo") &&
@@ -138,13 +115,38 @@ int next_move_b(Path* myPath, Player* p, Participant* pa) {
     return nextMove;
 }
 
+// Strategy B
+int next_move_b(Path* myPath, Player* p, Participant* pa) {
+    int** sites = myPath->sites;
+    int** positions = pa->positions;
+    int id = p->playerId;
+    int currentPos = pa->positions[id][1];
+    bool laterSite = true;
+
+    // next site is not full
+    if (pa->sizes[currentPos + 1] < sites[currentPos + 1][CAPACITY]) {
+        // all of others players are on the later sites
+        for (int i = 0; i < pa->numberOfPlayers; i++) {
+            if (i != id && positions[i][1] <= currentPos) {
+                laterSite = false;
+                break;
+            }
+        }
+        if (laterSite == true) {
+            return currentPos + 1;
+        }
+    }
+
+    return strategy_b_others(myPath, pa, id);
+}
+
 // Strategy A
 int next_move_a(Path* myPath, Player* p, Participant* pa) {
     int** sites = myPath->sites;
     const int* id = &p->playerId;
     const int* moneys = pa->moneys;
-    const int currentPos = pa->positions[*id][1];
-    const int nearestBarrier = nearest_barrier(myPath, currentPos);
+    int currentPos = pa->positions[*id][1];
+    int nearestBarrier = nearest_barrier(myPath, currentPos);
     int nextMove;
 
     bool foundMo = false;

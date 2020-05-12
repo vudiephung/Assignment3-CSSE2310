@@ -27,6 +27,12 @@ void errros_handler(int argc, char** argv, Path* myPath,
 // If there is at least one player has a card, *nocardsFound = false
 int most_cards_owner(Participant* pa, bool* noCardsFound);
 
+// Helper function for next_move_b() below, return the next position based
+// on player B strategy (do not include the case
+// "If the next site is not full and all other players are on later sites
+// than us, move forward one site"
+int strategy_b_others(Path* myPath, Participant* pa, int id);
+
 // return the next position based on the strategy of Player B
 int next_move_b(Path* myPath, Player* p, Participant* pa);
 

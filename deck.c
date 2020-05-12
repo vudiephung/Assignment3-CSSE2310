@@ -1,5 +1,5 @@
+#include <stdlib.h>
 #include "deck.h"
-#include "stdlib.h"
 
 CardType get_card_enum(const char card) {                                                                       
     if (card == 'A') {

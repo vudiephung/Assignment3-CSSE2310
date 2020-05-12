@@ -1,13 +1,13 @@
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <string.h>
+#include <stdlib.h>
 #include "path.h"
 #include "deck.h"
 #include "participants.h"
 #include "errors.h"
 #include "game.h"
-#include "signal.h"
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <string.h>
-#include <stdlib.h>
 
 void sighub_handler(int s) {
     kill(-1 * (getpid()), SIGKILL);
