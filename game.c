@@ -414,7 +414,7 @@ void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
         // Read DO
         int read = fscanf(readFile[pa->nextTurn], "%c%c%d%c", &firstLetter,
                 &secondLetter, &(pa->nextMove)[pa->nextTurn], &newLine);
-        // check whether message follows formar "DO" + site + '\n' or not
+        // check whether message follows format "DO" + site + '\n' or not
         if (read != 4 || firstLetter != 'D' || secondLetter != 'O' ||
                 newLine != '\n' || !is_valid_move(myPath, pa, pa->nextTurn,
                 pa->nextMove[pa->nextTurn])) { // Comms error
