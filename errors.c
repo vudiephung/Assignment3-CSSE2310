@@ -1,6 +1,11 @@
 #include "errors.h"
 #include <stdio.h>
 
+// Base on the error type, this function will fprintf() the corresponding
+// message to stderr and return Error
+// e.g: handle_error_message(NUMS_OF_ARGS_PLAYER)
+// will fprintf to stderr the message "Usage: 2310dealer deck path p1 {p2}"
+// and return 1 (NUMS_OF_ARGS)
 Error handle_error_message(Error type) {
     const char* errorMessage = "";
     switch (type) {
@@ -28,6 +33,8 @@ Error handle_error_message(Error type) {
     return type;
 }
 
+// Mostly like handle_error_message() but with different error messages
+// for Players
 Error handle_player_errors(Error type) {
     const char* errorMessage = "";
     switch (type) {

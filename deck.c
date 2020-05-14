@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include "deck.h"
 
+// Take a character and return a relevent card type
+// For example: Parameter is 'A' -> return CARD_A which is considered as 1
 CardType get_card_enum(const char card) {
     if (card == 'A') {
         return CARD_A;
@@ -20,6 +22,10 @@ CardType get_card_enum(const char card) {
     return CARD_ERROR;
 }
 
+// From file pointer of a deck file, read number of cards and cards from it
+// if the card number is invalid, which is < 4 or any of cards in that file
+// differ from A to E (inclusive), set myDeck->valid to false and return;
+// Otherwise, save read data into myDeck->cards and myDeck->numberOfCards
 void handle_deck(FILE* deckFile, Deck* myDeck) {
     int next = 0;
     int numberOfCards;
@@ -45,6 +51,8 @@ void handle_deck(FILE* deckFile, Deck* myDeck) {
     myDeck->valid = valid;
 }
 
+// Parameters: file name of a deck file (e.g: "d1.deck"), struct Deck
+// return whether true if valid file and false otherwise
 bool is_valid_deck_file(char* deck, Deck* myDeck) {
     FILE* deckFile = fopen(deck, "r");
     if (deckFile == NULL) {
@@ -55,6 +63,8 @@ bool is_valid_deck_file(char* deck, Deck* myDeck) {
     return myDeck->valid;
 }
 
+// Get next card from given Deck, starting at 0
+// Go back at the beginning if the dealer run out of cards and keep going
 char get_next_card(Deck* myDeck) {
     static int currentPos = 0;
     int numberOfCards = myDeck->numberOfCards;
