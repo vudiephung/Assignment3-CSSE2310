@@ -27,7 +27,7 @@ int next_move_a(Path* myPath, Player* p, Participant* pa);
 bool get_hap(int* hapInfo, int arrayLength, char* hapMessage, int addPoint,
         bool* negativeMoneys);
 
-bool handle_hap(char* buffer, Path* myPath, Player* p, Participant* pa);
+bool handle_hap(char* buffer, Path* myPath, Participant* pa);
 
 void handle_input(Path* myPath, Player* p, Participant* pa,
         char playerType);

@@ -59,14 +59,14 @@ char* get_type_char(SiteType site) {
     return siteName;
 }
 
-// Parameters: char* tempSite is a path that does not include number and ';'
+// Parameters: 'tempSites' is a path that does not include number and ';'
 // e.g: "::Mo1Do2Ri1V11V22::"
-// int position: Position to get the site. The purpose of this variable is
-// to plus with tempSite and from there, get two characters to know pass
+// 'position': Position to get the site. The purpose of this variable is
+// to plus with tempSites and from there, get two characters to know pass
 // in get_type_enum() and return given site
-// e.g: get 2 chars from (tempSite + 5) = "Do", get_type_enum("Do") = 3
+// e.g: get 2 chars from (tempSites + 5) = "Do", get_type_enum("Do") = 3
 // return 3
-SiteType get_site(Path* myPath, int position, const char* tempSites) {
+SiteType get_site(int position, const char* tempSites) {
     SiteType site;
     char buffer[CHARS_OF_SITE + 1];     
     for (int j = 0; j < CHARS_OF_SITE; j++) {
@@ -78,12 +78,12 @@ SiteType get_site(Path* myPath, int position, const char* tempSites) {
 }
 
 // In this function, loop through the
-// tempSites variable (explained above) with index += 3.
+// 'tempSites' variable (explained above) with index += 3.
 // In each loop: Check if first and last positions are barrier
 // The given site is valid or not
-// If not, set myPath->valid = false and return
+// If not, set 'myPath'->valid = false and return
 // Otherwise, set the capacity of each site if valid (0 < cap < 10).
-// However, for barriers: capacity = numberOfPlayers
+// However, for barriers: capacity = 'numberOfPlayers'
 // If all of sites is valid, save all into struct Path
 // return void;
 void get_sites(Path* myPath, const char* tempSites, int numberOfPlayers) {
@@ -98,7 +98,7 @@ void get_sites(Path* myPath, const char* tempSites, int numberOfPlayers) {
     for (int position = 0; position < numberOfSites * CHARS_OF_SITE_AND_LIMIT; 
             position += CHARS_OF_SITE_AND_LIMIT) {
         int limitOfCurrentSite;
-        SiteType site = get_site(myPath, position, tempSites);
+        SiteType site = get_site(position, tempSites);
         if (site == ERROR_TYPE) {
             myPath->valid = false;
             return;
@@ -132,9 +132,10 @@ void get_sites(Path* myPath, const char* tempSites, int numberOfPlayers) {
     myPath->sites = sites;
 }
 
-// in handle_path(), read the given number in pathFile, then malloc with
+// in handle_path(), read the given number in 'pathFile', then malloc with
 // appropriate sizes, loop through the path to read chars and save into
 // save it into myPath->rawPath. After that, run get_sites()
+// numberOfPlayers is used to pass to its inner function
 // return void
 void handle_path(FILE* pathFile, Path* myPath, int numberOfPlayers) {
     int numberOfSites;
@@ -172,7 +173,9 @@ void handle_path(FILE* pathFile, Path* myPath, int numberOfPlayers) {
 }
 
 // Path is set up by handle_path() and its followings functions
-// which means myPath->valid is already set up, then return myPath->valid
+// which means 'myPath'->valid is already set up, then return myPath->valid
+// 'numberOfPlayers' is passed to its inner function and
+// already explained in get_sites() function
 // return void
 bool is_valid_path(char* path, Path* myPath, int numberOfPlayers) {
     FILE* pathFile = fopen(path, "r");
@@ -184,8 +187,8 @@ bool is_valid_path(char* path, Path* myPath, int numberOfPlayers) {
     return myPath->valid;
 }
 
-// Based on the currentPositions, get the nearest barrier positions
-// from myPath->sites and return its position
+// Based on the 'currentPosition', get the nearest barrier positions
+// from 'myPath'->sites and return its position
 int nearest_barrier(Path* myPath, int currentPosition) {
     int* numberOfSites = &myPath->numberOfSites;
     int** sites = myPath->sites;

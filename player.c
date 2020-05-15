@@ -10,8 +10,10 @@
 // Based on given argc and argv:
 // 1. exit with error code of number of args if arg != 3
 // 2. exit with error code of player count if argv[1] is invalid
-// If argv[1] is valid, save it into pa->numberOfPlayers
-// 3. Do the same thing for argv[2] and save into p->playerId if valid
+// If argv[1] is valid, save it into
+// numberOfPlayers of struct 'Participant'
+// 3. Do the same thing for argv[2] and save into variable playerId
+// of struct 'Player' if valid
 // 4. read the path, if not valid, exit with error code of invalid path
 // return void;
 void errros_handler(int argc, char** argv, Path* myPath,
@@ -39,7 +41,9 @@ void errros_handler(int argc, char** argv, Path* myPath,
 }
 
 // Helper function of most_cards_owner() to find one player who has most of
-// the cards, return -1 iff there are at least 2 players have the same highest
+// the cards based on the 'array' of total cards collected by each player
+// and the 'size' of that array, which is numberOfPlayers.
+// Return -1 iff there are at least 2 players have the same highest
 // number of cards. Otherwise, return playerId who is most cards owner
 int find_index_of_max(int* array, int size) {
     int max = array[0];
@@ -59,6 +63,7 @@ int find_index_of_max(int* array, int size) {
     return index;
 }
 
+// get 'cards' and 'numberOfPlayers' from struct 'Participant'
 // return the player id who has most cards
 // return -1 if there are at least 2 players are most cards owner
 // If there is at least one player has a card, *nocardsFound = false
@@ -89,6 +94,9 @@ int most_cards_owner(Participant* pa, bool* noCardsFound) {
 // on player B strategy (do not include the case
 // "If the next site is not full and all other players are on later sites
 // than us, move forward one site"
+// Parameters: get sites from 'myPath', and other needed information
+// for strategy such as moneys from struct 'Participant'
+// and the 'id' of currnet player
 int strategy_b_others(Path* myPath, Participant* pa, int id) {
     // other cases
     int currentPos = pa->positions[id][1];
@@ -131,6 +139,8 @@ int strategy_b_others(Path* myPath, Participant* pa, int id) {
 
 // Strategy B
 // return the next position based on the strategy of Player B
+// by gettings sites from strcut 'Path', player id from struct 'Player'
+// and positions from struct 'Participants'
 int next_move_b(Path* myPath, Player* p, Participant* pa) {
     int** sites = myPath->sites;
     int** positions = pa->positions;
@@ -157,11 +167,12 @@ int next_move_b(Path* myPath, Player* p, Participant* pa) {
 
 // Strategy A
 // return the next position based on the strategy of Player A
+// the purpose of the parameters is similar to next_move_b()
 int next_move_a(Path* myPath, Player* p, Participant* pa) {
     int** sites = myPath->sites;
-    const int* id = &p->playerId;
+    int id = p->playerId;
     const int* moneys = pa->moneys;
-    int currentPos = pa->positions[*id][1];
+    int currentPos = pa->positions[id][1];
     int nearestBarrier = nearest_barrier(myPath, currentPos);
     int nextMove;
 
@@ -177,7 +188,7 @@ int next_move_a(Path* myPath, Player* p, Participant* pa) {
     for (int i = currentPos + 1; i <= nearestBarrier; i++) {
         if (pa->sizes[i] < sites[i][CAPACITY]) { // check empty space
             if (sites[i][SITE] == get_type_enum("Do")) {
-                if ((moneys[*id] > 0)) {
+                if ((moneys[id] > 0)) {
                     return i;
                 } else {
                     continue;
@@ -194,10 +205,10 @@ int next_move_a(Path* myPath, Player* p, Participant* pa) {
     return nextMove;
 }
 
-// Args: hapInfo: array of type int saves the read information from HAP
+// Args: 'hapInfo': array of type int saves the read information from HAP
 // message. e.g: hapInfo[0] = p, hapInfo[1] = n .... hapInfo[4] = c
-// arrayLength: legnth of hapInfo = 5;
-// hapMessage: Message from HAP that does not contain "HAP"
+// 'arrayLength': legnth of hapInfo = 5;
+// 'hapMessage': Message from HAP that does not contain "HAP"
 // e.g: "HAP0,2,3,-7,0" -> hapMessage = "0,2,3,-7,0"
 // Loop through hapMessage, at position addPoint (which is 2), if
 // after the following comma ',' is minus '-', *negativeMoneys = true
@@ -224,11 +235,13 @@ bool get_hap(int* hapInfo, int arrayLength, char* hapMessage, int addPoint,
     return true;
 }
 
-// From the complete HAP message from buffer. e.g: "HAP0,2,3,-7,0",
+// struct 'myPath' is used for getting numberOfSites and pass to handle_move()
+//  
+// From the complete HAP message from 'buffer'. e.g: "HAP0,2,3,-7,0",
 // get 3 first chars and comapare with "HAP", return false if it doesn't match
-// After get_hap(), save needed data into struct Participant* pa,
+// After get_hap(), save needed data into struct 'Participant'
 // handle the move and return true
-bool handle_hap(char* buffer, Path* myPath, Player* p, Participant* pa) {
+bool handle_hap(char* buffer, Path* myPath, Participant* pa) {
     int size = sizeof("HAP");
     char temporaryString[size];
     memcpy(temporaryString, buffer, size - 1);
@@ -279,6 +292,10 @@ bool handle_hap(char* buffer, Path* myPath, Player* p, Participant* pa) {
 // In this function, display the sites and positions of player
 // Continuously get input from stdin and handle with it
 // Print the score of the game if get "DONE" from stdin
+// Parameters: Struct 'Path', 'Player' and 'Participant' is
+// gotten from main() and used to passed to its inner function
+// there are 2 playerType: whether 'A' or 'B' to determines which
+// player type
 // return void;
 void handle_input(Path* myPath, Player* p, Participant* pa, char playerType) {
     int defaultBufferSize = 20;
@@ -301,7 +318,7 @@ void handle_input(Path* myPath, Player* p, Participant* pa, char playerType) {
                 // Game ened normally
                 break;
             } else {
-                if (!handle_hap(buffer, myPath, p, pa)) {
+                if (!handle_hap(buffer, myPath, pa)) {
                     exit(handle_player_errors(COMMUNICATION_PLAYER));
                 }
             }

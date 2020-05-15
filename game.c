@@ -18,13 +18,14 @@
 bool endOfChild = false;
 
 // function handler when receive SIGCHILD
+// receive an int in parameter and return void;
 void sigchild_handler(int s) {
     endOfChild = true;
 }
 
 // With this function, dealer can determines which player should go next
-// based on their current position (get from struct Participant)
-// and the number of sites (get from struct Path)
+// based on their current position (get from struct 'Participant')
+// and the number of sites (get from struct 'Path')
 // Then save the next turn (e.g: 0) into pa->nextTurn
 // return void;
 void calc_next_turn(Path* myPath, Participant* pa) {
@@ -48,10 +49,11 @@ void calc_next_turn(Path* myPath, Participant* pa) {
     }
 }
 
-// Malloc most of variables of struct Participant with needed sizes and set up
+// Malloc most of variables of struct 'Participant' with needed sizes and set up
 // their default values. For example, default positions for all players
 // at the beginning of the game is at the first site with id from high to low;
-// and default points and money are 0 and 7 respectively, etc
+// and default points and money are 0 and 7 respectively, etc.
+// For some variables, it needs 'numberOfSites' of struct 'Path'
 // return void;
 void set_up(Path* myPath, Participant* pa) {
     const int defaultMoney = 7;
@@ -127,6 +129,11 @@ bool is_valid_move(Path* myPath, Participant* pa,
 // Increase and decrease the capacity of their old position and new position
 // respectively and display to the screen the output from dealer, sites and
 // new position after the move.
+// Others parameters:
+// - Get next site from struct 'Path'
+// - If next site is 'Ri', get next card from struct 'Deck'
+// - Get positions of players, their current points, moneys
+//   from struct 'Participant'
 // Return void;
 void handle_move(FILE* file, Deck* myDeck, Path* myPath, Participant* pa,
         int playerId, const int toPosition) {
@@ -171,13 +178,13 @@ void handle_move(FILE* file, Deck* myDeck, Path* myPath, Participant* pa,
     *currentRow = pa->sizes[toPosition];
     pa->sizes[toPosition]++;
 
-    display_dealer_output(file, myPath, pa);
+    display_dealer_output(file, pa);
     display_game(file, myPath, pa);
 }
 
 // Used for both dealer or player: FILE* file is stdout or stderr
 // Display to the screen the sites (e.g: :: Mo Do Ri ::)
-// based on the sites and numberOfSites taken from struct Path
+// based on the sites and numberOfSites taken from struct 'Path'
 void display_sites(FILE* file, Path* myPath) {
     int* numberOfSites = &myPath->numberOfSites;
     int** sites = myPath->sites;
@@ -191,8 +198,9 @@ void display_sites(FILE* file, Path* myPath) {
 }
 
 // Used for both dealer or player: FILE* file is stdout or stderr
-// Based on the positions of players stored in pa->positions, displayer to the
-// screen with right orders
+// Based on the positions of players stored in struct 'Participant',
+// and numberOfSites in struct 'Path',
+// then Display to the screen with right orders.
 // return void;
 void display_player_position(FILE* file, Path* myPath, Participant* pa) {
     int numberOfSites = myPath->numberOfSites;
@@ -242,8 +250,9 @@ void display_player_position(FILE* file, Path* myPath, Participant* pa) {
 }
 
 // Display output from dealer. e.g: Player 0 Money=7 V1=0 .....
+// based on the information get from struct 'Participant'
 // return void;
-void display_dealer_output(FILE* file, Path* myPath, Participant* pa) {
+void display_dealer_output(FILE* file, Participant* pa) {
     fprintf(file, "Player %d Money=%d V1=%d V2=%d Points=%d ",
             (pa->nextTurn), (pa->moneys)[pa->nextTurn],
             (pa->siteV1)[pa->nextTurn],
@@ -262,6 +271,8 @@ void display_dealer_output(FILE* file, Path* myPath, Participant* pa) {
 }
 
 // display_game() includes display_sites() and display_player_position()
+// the parameters of this function already explained at two
+// nearest functions above
 // return void;
 void display_game(FILE* file, Path* myPath, Participant* pa) {
     display_sites(file, myPath);
@@ -269,6 +280,8 @@ void display_game(FILE* file, Path* myPath, Participant* pa) {
 }
 
 // Return true iff all players are at the last barrier and false otherwise
+// based on the position of last barrier from struct 'Path' and
+// the number of players from struct 'Participant'
 bool is_end_game(Path* myPath, Participant* pa) {
     int lastBarrier = myPath->numberOfSites - 1;
     for (int id = 0; id < pa->numberOfPlayers; id++) {
@@ -280,6 +293,10 @@ bool is_end_game(Path* myPath, Participant* pa) {
 }
 
 // Calculate scores and then display the message to the screen
+// based on the data get from struct 'Participant' likes
+// cards, points or number of V1 site each player went by
+// This function both used for players ('file' == stderr) and
+// dealer ('file' == stdout)
 // e.g: "Scores: 10,12\n"
 // return void;
 void calc_scores(FILE* file, Participant* pa) {
@@ -317,8 +334,16 @@ void calc_scores(FILE* file, Participant* pa) {
     }
 }
 
-// Close the files and pipes that are left based on the id of the
-// players. Return void;
+// Close the files and pipes that are left based on the 'id' of the
+// players.
+// 'pipesWrite', 'pipesRead', 'writeFile', 'readFile'
+// all have sizes of numberOfPlayers.
+// In each int* pipesWrite, there are 2 ends of dealer: WRITE_END
+// and 'READ_END'. Similar for pipesRead
+// FILE* writeFile is the file pointer with respect to the file descriptor
+// write to pipesWrite of each player
+// Similar for FILE* readFile
+// Return void;
 void close_pipes_and_files(int id, int** pipesWrite, int** pipesRead,
         FILE** writeFile, FILE** readFile) {
     fclose(writeFile[id]);
@@ -329,17 +354,19 @@ void close_pipes_and_files(int id, int** pipesWrite, int** pipesRead,
     close(pipesRead[id][READ_END]);
 }
 
-// Send "DONE" to all of the players, or "EARLY" to players that are not
-// terminated by signal based on the parameter bool early
-// After send to the pipes, close files and pipes of each players
-// kill and reap the "alive" players in case of the players are not exit
-// if early == true, exit dealer with Comms error
+// Based on 'numberOfPlayers' and 'childIds',
+// Send "DONE" to all of the players ('early' == false) 
+// or "EARLY" to players that are not terminated by signal' ('early' == true)
+// After send to the pipes, close files and pipes (get from parameters)
+// of each players kill and reap the "alive" players in case of 
+// the players are not exit. If early == true, exit dealer with Comms error
 // return void;
 void send_last_message(pid_t* childIds, int numberOfPlayers, 
         FILE** writeFile, FILE** readFile, int** pipesWrite, int** pipesRead,
         bool early) {
     const int emptyValue = -1;
     pid_t pid;
+
     // Wait NOHANG for the child (In case the child is termintaed by signal)
     while (pid = waitpid(-1, 0, WNOHANG), pid > 0) {
         for (int i = 0; i < numberOfPlayers; i++) {
@@ -367,13 +394,12 @@ void send_last_message(pid_t* childIds, int numberOfPlayers,
     }
 }
 
-// After fork(), each player will close WRITE_END of its pipesWrite and
-// READ_END of its pipesRead based on its id, then dup2() and execlp
-// with given char* currentPlayer (e.g: "./2310A"), char* playerCountStr
+// After fork(), each player will close WRITE_END of its 'pipesWrite' and
+// READ_END of its 'pipesRead' based on its id, then dup2() and execlp
+// with given 'currentPlayer' (e.g: "./2310A") and 'playersCountString'
 // (e.g: "4") and its id as a string (e.g: "0")
 // return void;
 void handle_child(int id, char* currentPlayer, char* playersCountString,
-        FILE** writeFile, FILE** readFile,
         int** pipesWrite, int** pipesRead) {
     close(pipesWrite[id][WRITE_END]);
     close(pipesRead[id][READ_END]);
@@ -449,8 +475,8 @@ void initial_game(int numberOfPlayers, FILE** writeFile, FILE** readFile,
         if (childIds[id] == -1) {
             exit(handle_error_message(STARTING_PROCESS));
         } else if (childIds[id] == 0) { // Child
-            handle_child(id, currentPlayer, playersCountString, writeFile,
-                    readFile, pipesWrite, pipesRead);
+            handle_child(id, currentPlayer, playersCountString,
+                    pipesWrite, pipesRead);
         } else { // Parent
             handle_parent(id, rawPath, writeFile, readFile, pipesWrite,
                     pipesRead);
@@ -461,11 +487,14 @@ void initial_game(int numberOfPlayers, FILE** writeFile, FILE** readFile,
 }
 
 // After fork() and send Path to all parents
-// In this function, display_game(), while the game is not end, determines
+// In this function, run display_game(), while the game is not end, determines
 // which player should go next. To avoid SIGPIPE, check whether that player
 // is alive or not before sending "YT", read "DO", exit if comms error with
 // that player require invalid move. Otherwisem handle_move() and send "HAP"
-// to all players .
+// to all players.
+// This function needs to pass all of its parameters that it gets from
+// function run_game() (mentioned below) to its inner functions
+// This function also needs the numberOfPlayers from struct 'Participant'
 // return void;
 void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
         FILE** writeFile, FILE** readFile,
@@ -516,6 +545,9 @@ void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
 
 // set up sigaction of SIGCHILD, set up variables and runs the game
 // When the game is over, send "DONE" to all players
+// All of the parameters of this function is gotten from the main() function
+// in order to pass to its inner function. The purpose of those parameters are
+// all mentioned previously
 // return void;
 void run_game(Deck* myDeck, Path* myPath, Participant* pa, char** argv) {
     struct sigaction sigchildAction;

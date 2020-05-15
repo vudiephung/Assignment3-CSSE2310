@@ -23,7 +23,7 @@ void display_sites(FILE* file, Path* myPath);
 
 void display_player_position(FILE* file, Path* myPath, Participant* pa);
 
-void display_dealer_output(FILE* file, Path* myPath, Participant* pa);
+void display_dealer_output(FILE* file, Participant* pa);
 
 void display_game(FILE* file, Path* myPath, Participant* pa);
 
@@ -39,7 +39,6 @@ void send_last_message(pid_t* childIds, int numberOfPlayers,
         bool early);
 
 void handle_child(int id, char* currentPlayer, char* playersCountString,
-        FILE** writeFile, FILE** readFile,
         int** pipesWrite, int** pipesRead);
 
 void handle_parent(int id, char* rawPath, FILE** writeFile, FILE** readFile,

@@ -43,7 +43,7 @@ SiteType get_type_enum(const char* site);
 
 char* get_type_char(SiteType site);
 
-SiteType get_site(Path* myPath, int position, const char* tempSites);
+SiteType get_site(int position, const char* tempSites);
 
 void get_sites(Path* myPath, const char* tempSites, int numberOfPlayers);
 
