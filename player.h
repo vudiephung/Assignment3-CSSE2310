@@ -14,24 +14,24 @@ typedef struct {
 // This header file is used for both 2310A.c and 2310B.c
 
 void errros_handler(int argc, char** argv, Path* myPath,
-        Participant* pa, Player* p);
+        Participant* participants, Player* player);
 
-int most_cards_owner(Participant* pa, bool* noCardsFound);
+int most_cards_owner(Participant* participants, bool* noCardsFound);
 
-int strategy_b_others(Path* myPath, Participant* pa, int id);
+int strategy_b_others(Path* myPath, Participant* participants, int id);
 
-int next_move_b(Path* myPath, Player* p, Participant* pa);
+int next_move_b(Path* myPath, Player* player, Participant* participants);
 
-int next_move_a(Path* myPath, Player* p, Participant* pa);
+int next_move_a(Path* myPath, Player* player, Participant* participants);
 
 bool get_hap(int* hapInfo, int arrayLength, char* hapMessage, int addPoint,
         bool* negativeMoneys);
 
-bool handle_hap(char* buffer, Path* myPath, Participant* pa);
+bool handle_hap(char* buffer, Path* myPath, Participant* participants);
 
-void handle_input(Path* myPath, Player* p, Participant* pa,
+void handle_input(Path* myPath, Player* player, Participant* participants,
         char playerType);
 
-bool get_path(Path* myPath, Player* p, Participant* pa);
+bool get_path(Path* myPath, Player* player, Participant* participants);
 
 #endif

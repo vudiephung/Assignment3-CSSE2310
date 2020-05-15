@@ -17,7 +17,7 @@
 // 4. read the path, if not valid, exit with error code of invalid path
 // return void;
 void errros_handler(int argc, char** argv, Path* myPath,
-        Participant* pa, Player* p) {
+        Participant* participants, Player* player) {
     if (argc != 3) {
         exit(handle_player_errors(NUMS_OF_ARGS));
     }
@@ -26,16 +26,16 @@ void errros_handler(int argc, char** argv, Path* myPath,
     if (!is_digits_only(argv[1], &numberOfPlayers) || numberOfPlayers < 1) {
         exit(handle_player_errors(PLAYER_COUNT));
     }
-    pa->numberOfPlayers = numberOfPlayers;
+    participants->numberOfPlayers = numberOfPlayers;
 
     int playerId;
     if (!is_digits_only(argv[2], &playerId) || playerId < 0 ||
             playerId >= numberOfPlayers) {
         exit(handle_player_errors(ID));
     }
-    p->playerId = playerId;
+    player->playerId = playerId;
 
-    if (!get_path(myPath, p, pa)) {
+    if (!get_path(myPath, player, participants)) {
         exit(handle_player_errors(PATH_PLAYER));
     }
 }
@@ -67,9 +67,9 @@ int find_index_of_max(int* array, int size) {
 // return the player id who has most cards
 // return -1 if there are at least 2 players are most cards owner
 // If there is at least one player has a card, *nocardsFound = false
-int most_cards_owner(Participant* pa, bool* noCardsFound) {
-    int numberOfPlayers = pa->numberOfPlayers;
-    int** cards = pa->cards;
+int most_cards_owner(Participant* participants, bool* noCardsFound) {
+    int numberOfPlayers = participants->numberOfPlayers;
+    int** cards = participants->cards;
     int owner;
 
     int* cardsCollected = malloc(sizeof(int) * numberOfPlayers);
@@ -97,22 +97,22 @@ int most_cards_owner(Participant* pa, bool* noCardsFound) {
 // Parameters: get sites from 'myPath', and other needed information
 // for strategy such as moneys from struct 'Participant'
 // and the 'id' of currnet player
-int strategy_b_others(Path* myPath, Participant* pa, int id) {
+int strategy_b_others(Path* myPath, Participant* participants, int id) {
     // other cases
-    int currentPos = pa->positions[id][1];
+    int currentPos = participants->positions[id][1];
     int nearestBarrier = nearest_barrier(myPath, currentPos);
     int** sites = myPath->sites;
-    const int* moneys = pa->moneys;
+    const int* moneys = participants->moneys;
     int nextMove;
 
     bool noCardsFound = true;
-    int mostCardsOwner = most_cards_owner(pa, &noCardsFound);
+    int mostCardsOwner = most_cards_owner(participants, &noCardsFound);
     bool foundRi = false;
     bool foundV2 = false;
     bool foundOthers = false;
 
     for (int i = currentPos + 1; i <= nearestBarrier; i++) {
-        if (pa->sizes[i] < sites[i][CAPACITY]) {
+        if (participants->sizes[i] < sites[i][CAPACITY]) {
             if (sites[i][SITE] == get_type_enum("Mo") &&
                     (moneys[id] % 2) != 0) {
                 return i;
@@ -141,17 +141,17 @@ int strategy_b_others(Path* myPath, Participant* pa, int id) {
 // return the next position based on the strategy of Player B
 // by gettings sites from strcut 'Path', player id from struct 'Player'
 // and positions from struct 'Participants'
-int next_move_b(Path* myPath, Player* p, Participant* pa) {
+int next_move_b(Path* myPath, Player* player, Participant* participants) {
     int** sites = myPath->sites;
-    int** positions = pa->positions;
-    int id = p->playerId;
-    int currentPos = pa->positions[id][1];
+    int** positions = participants->positions;
+    int id = player->playerId;
+    int currentPos = participants->positions[id][1];
     bool laterSite = true;
 
     // next site is not full
-    if (pa->sizes[currentPos + 1] < sites[currentPos + 1][CAPACITY]) {
+    if (participants->sizes[currentPos + 1] < sites[currentPos + 1][CAPACITY]) {
         // all of others players are on the later sites
-        for (int i = 0; i < pa->numberOfPlayers; i++) {
+        for (int i = 0; i < participants->numberOfPlayers; i++) {
             if (i != id && positions[i][1] <= currentPos) {
                 laterSite = false;
                 break;
@@ -162,17 +162,17 @@ int next_move_b(Path* myPath, Player* p, Participant* pa) {
         }
     }
 
-    return strategy_b_others(myPath, pa, id);
+    return strategy_b_others(myPath, participants, id);
 }
 
 // Strategy A
 // return the next position based on the strategy of Player A
 // the purpose of the parameters is similar to next_move_b()
-int next_move_a(Path* myPath, Player* p, Participant* pa) {
+int next_move_a(Path* myPath, Player* player, Participant* participants) {
     int** sites = myPath->sites;
-    int id = p->playerId;
-    const int* moneys = pa->moneys;
-    int currentPos = pa->positions[id][1];
+    int id = player->playerId;
+    const int* moneys = participants->moneys;
+    int currentPos = participants->positions[id][1];
     int nearestBarrier = nearest_barrier(myPath, currentPos);
     int nextMove;
 
@@ -180,13 +180,13 @@ int next_move_a(Path* myPath, Player* p, Participant* pa) {
     bool foundOthers = false;
 
     if (sites[currentPos + 1][SITE] == get_type_enum("Mo") &&
-            pa->sizes[currentPos + 1] < sites[currentPos + 1][CAPACITY]) {
+            participants->sizes[currentPos + 1] < sites[currentPos + 1][CAPACITY]) {
         nextMove = currentPos + 1;
         foundMo = true;
     }
 
     for (int i = currentPos + 1; i <= nearestBarrier; i++) {
-        if (pa->sizes[i] < sites[i][CAPACITY]) { // check empty space
+        if (participants->sizes[i] < sites[i][CAPACITY]) { // check empty space
             if (sites[i][SITE] == get_type_enum("Do")) {
                 if ((moneys[id] > 0)) {
                     return i;
@@ -241,7 +241,7 @@ bool get_hap(int* hapInfo, int arrayLength, char* hapMessage, int addPoint,
 // get 3 first chars and comapare with "HAP", return false if it doesn't match
 // After get_hap(), save needed data into struct 'Participant'
 // handle the move and return true
-bool handle_hap(char* buffer, Path* myPath, Participant* pa) {
+bool handle_hap(char* buffer, Path* myPath, Participant* participants) {
     int size = sizeof("HAP");
     char temporaryString[size];
     memcpy(temporaryString, buffer, size - 1);
@@ -273,19 +273,19 @@ bool handle_hap(char* buffer, Path* myPath, Participant* pa) {
     int toPosition = hapInfo[newPosition];
     int card = hapInfo[receivedCard];
 
-    if (id >= pa->numberOfPlayers ||
+    if (id >= participants->numberOfPlayers ||
             toPosition >= myPath->numberOfSites ||
             card < 0 || card > numberOfLetters) {
         return false;
     }
 
-    pa->nextTurn = id; 
-    pa->moneys[id] += negativeMoneys ? -hapInfo[moneyChange] :
+    participants->nextTurn = id; 
+    participants->moneys[id] += negativeMoneys ? -hapInfo[moneyChange] :
             hapInfo[moneyChange];
-    pa->points[id] += hapInfo[addPoint];
-    pa->cards[id][card - 1] += 1;
+    participants->points[id] += hapInfo[addPoint];
+    participants->cards[id][card - 1] += 1;
 
-    handle_move(stderr, NULL, myPath, pa, id, toPosition);
+    handle_move(stderr, NULL, myPath, participants, id, toPosition);
     return true;
 }
 
@@ -297,18 +297,18 @@ bool handle_hap(char* buffer, Path* myPath, Participant* pa) {
 // there are 2 playerType: whether 'A' or 'B' to determines which
 // player type
 // return void;
-void handle_input(Path* myPath, Player* p, Participant* pa, char playerType) {
+void handle_input(Path* myPath, Player* player, Participant* participants, char playerType) {
     int defaultBufferSize = 20;
     char* buffer = malloc(sizeof(char) * defaultBufferSize);
 
-    display_game(stderr, myPath, pa);
+    display_game(stderr, myPath, participants);
     while (true) {
         if (read_line(stdin, buffer, &defaultBufferSize)) {
             if (!strcmp(buffer, "YT")) {
                 // return a move
                 int nextMove = playerType == 'A' ?
-                        next_move_a(myPath, p, pa) :
-                        next_move_b(myPath, p, pa);
+                        next_move_a(myPath, player, participants) :
+                        next_move_b(myPath, player, participants);
                 printf("DO%d\n", nextMove);
                 fflush(stdout);
             } else if (!strcmp(buffer, "EARLY")) {
@@ -318,7 +318,7 @@ void handle_input(Path* myPath, Player* p, Participant* pa, char playerType) {
                 // Game ened normally
                 break;
             } else {
-                if (!handle_hap(buffer, myPath, pa)) {
+                if (!handle_hap(buffer, myPath, participants)) {
                     exit(handle_player_errors(COMMUNICATION_PLAYER));
                 }
             }
@@ -327,20 +327,20 @@ void handle_input(Path* myPath, Player* p, Participant* pa, char playerType) {
         }
     }
 
-    calc_scores(stderr, pa);
+    calc_scores(stderr, participants);
     free(buffer);
 }
 
 // print '^', handle the path. If path file is valid, set up the variables
 // and return true. Return false if the path is invalid
-bool get_path(Path* myPath, Player* p, Participant* pa) {
+bool get_path(Path* myPath, Player* player, Participant* participants) {
     printf("^");
     fflush(stdout);
 
-    handle_path(stdin, myPath, pa->numberOfPlayers);
+    handle_path(stdin, myPath, participants->numberOfPlayers);
 
     if (myPath->valid) {
-        set_up(myPath, pa);
+        set_up(myPath, participants);
     }
     return myPath->valid;
 }

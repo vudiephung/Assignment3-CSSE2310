@@ -7,14 +7,14 @@
 
 int main(int argc, char** argv) {
     Path* myPath = malloc(sizeof(Path) * 1);
-    Player* p = malloc(sizeof(Player) * 1);
-    Participant* pa = malloc(sizeof(Participant) * 1);
+    Player* player = malloc(sizeof(Player) * 1);
+    Participant* participants = malloc(sizeof(Participant) * 1);
 
-    errros_handler(argc, argv, myPath, pa, p);
-    handle_input(myPath, p, pa, 'B');
+    errros_handler(argc, argv, myPath, participants, player);
+    handle_input(myPath, player, participants, 'B');
 
     free(myPath);
-    free(p);
-    free(pa);
+    free(player);
+    free(participants);
     return 0;
 }

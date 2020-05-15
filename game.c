@@ -26,20 +26,20 @@ void sigchild_handler(int s) {
 // With this function, dealer can determines which player should go next
 // based on their current position (get from struct 'Participant')
 // and the number of sites (get from struct 'Path')
-// Then save the next turn (e.g: 0) into pa->nextTurn
+// Then save the next turn (e.g: 0) into participants->nextTurn
 // return void;
-void calc_next_turn(Path* myPath, Participant* pa) {
+void calc_next_turn(Path* myPath, Participant* participants) {
     int numberOfSites = myPath->numberOfSites;
-    int numberOfPlayer = pa->numberOfPlayers;
-    int** positions = pa->positions;
-    int* nextTurn = &pa->nextTurn;
+    int numberOfPlayer = participants->numberOfPlayers;
+    int** positions = participants->positions;
+    int* nextTurn = &participants->nextTurn;
 
     // left to right
     for (int site = 0; site < numberOfSites; site++) {
         // bottom to top
         for (int id = 0; id < numberOfPlayer; id++) {
             // if the player is at lowest position
-            if (positions[id][0] == pa->sizes[site] - 1 &&
+            if (positions[id][0] == participants->sizes[site] - 1 &&
                     // site of that player is the current site
                     positions[id][1] == site) {
                 *nextTurn = id;
@@ -55,9 +55,9 @@ void calc_next_turn(Path* myPath, Participant* pa) {
 // and default points and money are 0 and 7 respectively, etc.
 // For some variables, it needs 'numberOfSites' of struct 'Path'
 // return void;
-void set_up(Path* myPath, Participant* pa) {
+void set_up(Path* myPath, Participant* participants) {
     const int defaultMoney = 7;
-    int numberOfPlayers = pa->numberOfPlayers;
+    int numberOfPlayers = participants->numberOfPlayers;
     // These variables are explained in Participants.h
     int** positions = malloc(sizeof(int*) * numberOfPlayers);
     int** cards = malloc(sizeof(int*) * numberOfPlayers);
@@ -94,25 +94,25 @@ void set_up(Path* myPath, Participant* pa) {
         }
     }
 
-    pa->positions = positions;
-    pa->moneys = moneys;
-    pa->points = points;
-    pa->siteV1 = siteV1;
-    pa->siteV2 = siteV2;
-    pa->pointChange = pointChange;
-    pa->moneyChange = moneyChange;
-    pa->cards = cards;
-    pa->nextMove = nextMove;
-    pa->sizes = sizes;
+    participants->positions = positions;
+    participants->moneys = moneys;
+    participants->points = points;
+    participants->siteV1 = siteV1;
+    participants->siteV2 = siteV2;
+    participants->pointChange = pointChange;
+    participants->moneyChange = moneyChange;
+    participants->cards = cards;
+    participants->nextMove = nextMove;
+    participants->sizes = sizes;
 }
 
 // return true iff given playerId want to move to toPosition is
 // a valid destination
-bool is_valid_move(Path* myPath, Participant* pa,
+bool is_valid_move(Path* myPath, Participant* participants,
         const int playerId, int toPosition) {
-    int currentPosition = pa->positions[playerId][1];
+    int currentPosition = participants->positions[playerId][1];
     int closestBarrier = nearest_barrier(myPath, currentPosition);
-    int nextSize = pa->sizes[toPosition];
+    int nextSize = participants->sizes[toPosition];
     int nextCap = myPath->sites[toPosition][CAPACITY];
 
     return (toPosition <= closestBarrier) && (nextSize < nextCap) &&
@@ -135,51 +135,51 @@ bool is_valid_move(Path* myPath, Participant* pa,
 // - Get positions of players, their current points, moneys
 //   from struct 'Participant'
 // Return void;
-void handle_move(FILE* file, Deck* myDeck, Path* myPath, Participant* pa,
+void handle_move(FILE* file, Deck* myDeck, Path* myPath, Participant* participants,
         int playerId, const int toPosition) {
-    int** positions = pa->positions;
+    int** positions = participants->positions;
     int* currentPosition = &positions[playerId][1];
     int* currentRow = &positions[playerId][0];
-    int* playerMoney = &(pa->moneys)[playerId];
+    int* playerMoney = &(participants->moneys)[playerId];
     int nextSite = myPath->sites[toPosition][SITE];
-    pa->nextCard = 0;
-    pa->pointChange[playerId] = 0;
-    pa->moneyChange[playerId] = 0;
+    participants->nextCard = 0;
+    participants->pointChange[playerId] = 0;
+    participants->moneyChange[playerId] = 0;
 
     if (file == stdout) { // dealer
         if (nextSite == MONEY) {
             *playerMoney += 3;
-            pa->moneyChange[playerId] = 3;
+            participants->moneyChange[playerId] = 3;
         } else if (nextSite == MONEY_2_POINT) {
-            pa->pointChange[playerId] = (int)floor(*playerMoney / 2);
-            pa->moneyChange[playerId] = -(*playerMoney);
-            pa->points[playerId] += pa->pointChange[playerId];
+            participants->pointChange[playerId] = (int)floor(*playerMoney / 2);
+            participants->moneyChange[playerId] = -(*playerMoney);
+            participants->points[playerId] += participants->pointChange[playerId];
             *playerMoney = 0;
         } else if (nextSite == DRAW_NEXT_CARD) {
             char card = get_next_card(myDeck);
-            pa->nextCard = get_card_enum(card);
-            pa->cards[playerId][pa->nextCard - 1]++; 
+            participants->nextCard = get_card_enum(card);
+            participants->cards[playerId][participants->nextCard - 1]++; 
         }
     }
 
     switch (nextSite) {
         case SITE_V1:
-            (pa->siteV1)[playerId] += 1;
+            (participants->siteV1)[playerId] += 1;
             break;
         case SITE_V2:
-            (pa->siteV2)[playerId] += 1;
+            (participants->siteV2)[playerId] += 1;
             break;
         default:
             break;
     }
 
-    pa->sizes[*currentPosition]--;
+    participants->sizes[*currentPosition]--;
     *currentPosition = toPosition;
-    *currentRow = pa->sizes[toPosition];
-    pa->sizes[toPosition]++;
+    *currentRow = participants->sizes[toPosition];
+    participants->sizes[toPosition]++;
 
-    display_dealer_output(file, pa);
-    display_game(file, myPath, pa);
+    display_dealer_output(file, participants);
+    display_game(file, myPath, participants);
 }
 
 // Used for both dealer or player: FILE* file is stdout or stderr
@@ -202,12 +202,12 @@ void display_sites(FILE* file, Path* myPath) {
 // and numberOfSites in struct 'Path',
 // then Display to the screen with right orders.
 // return void;
-void display_player_position(FILE* file, Path* myPath, Participant* pa) {
+void display_player_position(FILE* file, Path* myPath, Participant* participants) {
     int numberOfSites = myPath->numberOfSites;
-    int numberOfPlayers = pa->numberOfPlayers;
-    int** positions = pa->positions;
+    int numberOfPlayers = participants->numberOfPlayers;
+    int** positions = participants->positions;
 
-    int largestSize = find_max(pa->sizes, numberOfSites, NULL);
+    int largestSize = find_max(participants->sizes, numberOfSites, NULL);
     // Loop for the rows from 0 to largestSize to avoid to print the
     // row which does not have any player in it
     for (int id = 0; id < largestSize; id++) {
@@ -252,14 +252,14 @@ void display_player_position(FILE* file, Path* myPath, Participant* pa) {
 // Display output from dealer. e.g: Player 0 Money=7 V1=0 .....
 // based on the information get from struct 'Participant'
 // return void;
-void display_dealer_output(FILE* file, Participant* pa) {
+void display_dealer_output(FILE* file, Participant* participants) {
     fprintf(file, "Player %d Money=%d V1=%d V2=%d Points=%d ",
-            (pa->nextTurn), (pa->moneys)[pa->nextTurn],
-            (pa->siteV1)[pa->nextTurn],
-            (pa->siteV2)[pa->nextTurn], (pa->points)[pa->nextTurn]);
+            (participants->nextTurn), (participants->moneys)[participants->nextTurn],
+            (participants->siteV1)[participants->nextTurn],
+            (participants->siteV2)[participants->nextTurn], (participants->points)[participants->nextTurn]);
     fflush(file);
     for (int i = 0; i < NUM_A_TO_E; i++) {
-        fprintf(file, "%c=%d", 'A' + i, (pa->cards)[pa->nextTurn][i]);
+        fprintf(file, "%c=%d", 'A' + i, (participants->cards)[participants->nextTurn][i]);
         fflush(file);
         if (i != (NUM_A_TO_E - 1)) {
             fprintf(file, " ");
@@ -274,18 +274,18 @@ void display_dealer_output(FILE* file, Participant* pa) {
 // the parameters of this function already explained at two
 // nearest functions above
 // return void;
-void display_game(FILE* file, Path* myPath, Participant* pa) {
+void display_game(FILE* file, Path* myPath, Participant* participants) {
     display_sites(file, myPath);
-    display_player_position(file, myPath, pa);
+    display_player_position(file, myPath, participants);
 }
 
 // Return true iff all players are at the last barrier and false otherwise
 // based on the position of last barrier from struct 'Path' and
 // the number of players from struct 'Participant'
-bool is_end_game(Path* myPath, Participant* pa) {
+bool is_end_game(Path* myPath, Participant* participants) {
     int lastBarrier = myPath->numberOfSites - 1;
-    for (int id = 0; id < pa->numberOfPlayers; id++) {
-        if (pa->positions[id][1] != lastBarrier) {
+    for (int id = 0; id < participants->numberOfPlayers; id++) {
+        if (participants->positions[id][1] != lastBarrier) {
             return false;
         }
     }
@@ -299,14 +299,14 @@ bool is_end_game(Path* myPath, Participant* pa) {
 // dealer ('file' == stdout)
 // e.g: "Scores: 10,12\n"
 // return void;
-void calc_scores(FILE* file, Participant* pa) {
-    int** cards = pa->cards;
-    int* points = pa->points;
-    int numberOfPlayers = pa->numberOfPlayers;
+void calc_scores(FILE* file, Participant* participants) {
+    int** cards = participants->cards;
+    int* points = participants->points;
+    int numberOfPlayers = participants->numberOfPlayers;
     fprintf(file, "Scores: ");
     for (int id = 0; id < numberOfPlayers; id++) {
         // Add V1,V2 scores
-        pa->points[id] += (pa->siteV1[id] + pa->siteV2[id]);
+        participants->points[id] += (participants->siteV1[id] + participants->siteV2[id]);
         // Add scores by collecting cards
         int maxPointsOfASet = 10; // Set of 5 cards
         bubble_sort(cards[id], NUM_A_TO_E);
@@ -322,7 +322,7 @@ void calc_scores(FILE* file, Participant* pa) {
                         maxPointsOfASet;
                 maxPointsOfASet -= 2;
             }
-            pa->points[id] += pointsChange;
+            participants->points[id] += pointsChange;
         }
         // Print Scores:
         fprintf(file, "%d", points[id]);
@@ -496,37 +496,37 @@ void initial_game(int numberOfPlayers, FILE** writeFile, FILE** readFile,
 // function run_game() (mentioned below) to its inner functions
 // This function also needs the numberOfPlayers from struct 'Participant'
 // return void;
-void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
+void communicate(Deck* myDeck, Path* myPath, Participant* participants, pid_t* childIds,
         FILE** writeFile, FILE** readFile,
         int** pipesWrite, int** pipesRead) {
-    int numberOfPlayers = pa->numberOfPlayers;
-    display_game(stdout, myPath, pa);
-    while (!is_end_game(myPath, pa)) {
+    int numberOfPlayers = participants->numberOfPlayers;
+    display_game(stdout, myPath, participants);
+    while (!is_end_game(myPath, participants)) {
         char firstLetter;
         char secondLetter;
         char newLine;
-        calc_next_turn(myPath, pa);
+        calc_next_turn(myPath, participants);
         // Send YT
         if (endOfChild) { // check end of child to avoid SIGPIPE
             send_last_message(childIds, numberOfPlayers, writeFile, readFile,
                     pipesWrite, pipesRead, true);
         }
-        fprintf(writeFile[pa->nextTurn], "YT\n");
-        fflush(writeFile[pa->nextTurn]);
+        fprintf(writeFile[participants->nextTurn], "YT\n");
+        fflush(writeFile[participants->nextTurn]);
 
         // Read DO
-        int read = fscanf(readFile[pa->nextTurn], "%c%c%d%c", &firstLetter,
-                &secondLetter, &(pa->nextMove)[pa->nextTurn], &newLine);
+        int read = fscanf(readFile[participants->nextTurn], "%c%c%d%c", &firstLetter,
+                &secondLetter, &(participants->nextMove)[participants->nextTurn], &newLine);
         // check whether message follows format "DO" + site + '\n' or not
         if (read != 4 || firstLetter != 'D' || secondLetter != 'O' ||
-                newLine != '\n' || !is_valid_move(myPath, pa, pa->nextTurn,
-                pa->nextMove[pa->nextTurn])) { // Comms error
+                newLine != '\n' || !is_valid_move(myPath, participants, participants->nextTurn,
+                participants->nextMove[participants->nextTurn])) { // Comms error
             send_last_message(childIds, numberOfPlayers, writeFile, readFile,
                     pipesWrite, pipesRead, true);
         }
 
-        handle_move(stdout, myDeck, myPath, pa,
-                pa->nextTurn, (pa->nextMove)[pa->nextTurn]);
+        handle_move(stdout, myDeck, myPath, participants,
+                participants->nextTurn, (participants->nextMove)[participants->nextTurn]);
 
         // Send HAP
         if (endOfChild) { // check end of child to avoid SIGPIPE
@@ -535,9 +535,9 @@ void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
         }
         for (int id = 0; id < numberOfPlayers; id++) {
             fprintf(writeFile[id], "HAP%d,%d,%d,%d,%d\n",
-                    (pa->nextTurn), (pa->nextMove)[pa->nextTurn],
-                    (pa->pointChange)[pa->nextTurn],
-                    (pa->moneyChange)[pa->nextTurn], pa->nextCard);
+                    (participants->nextTurn), (participants->nextMove)[participants->nextTurn],
+                    (participants->pointChange)[participants->nextTurn],
+                    (participants->moneyChange)[participants->nextTurn], participants->nextCard);
             fflush(writeFile[id]);
         }
     }
@@ -549,16 +549,16 @@ void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
 // in order to pass to its inner function. The purpose of those parameters are
 // all mentioned previously
 // return void;
-void run_game(Deck* myDeck, Path* myPath, Participant* pa, char** argv) {
+void run_game(Deck* myDeck, Path* myPath, Participant* participants, char** argv) {
     struct sigaction sigchildAction;
     sigchildAction.sa_handler = sigchild_handler;
     sigchildAction.sa_flags = SA_RESTART | SA_NOCLDSTOP;
     sigaction(SIGCHLD, &sigchildAction, 0);   
 
     // Set up default variables
-    set_up(myPath, pa);
+    set_up(myPath, participants);
     
-    int numberOfPlayers = pa->numberOfPlayers; // 2 (int)
+    int numberOfPlayers = participants->numberOfPlayers; // 2 (int)
     char* rawPath = myPath->rawPath;
     FILE** writeFile = malloc(sizeof(FILE*) * numberOfPlayers);
     FILE** readFile = malloc(sizeof(FILE*) * numberOfPlayers);
@@ -569,12 +569,12 @@ void run_game(Deck* myDeck, Path* myPath, Participant* pa, char** argv) {
     initial_game(numberOfPlayers, writeFile, readFile,
             pipesWrite, pipesRead, childIds, rawPath, argv);
 
-    communicate(myDeck, myPath, pa, childIds, writeFile, readFile,
+    communicate(myDeck, myPath, participants, childIds, writeFile, readFile,
             pipesWrite, pipesRead);
 
     // End game, send "DONE"
     send_last_message(childIds, numberOfPlayers, writeFile, readFile,
             pipesWrite, pipesRead, false);
 
-    calc_scores(stdout, pa);
+    calc_scores(stdout, participants);
 }
