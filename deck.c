@@ -51,8 +51,8 @@ void handle_deck(FILE* deckFile, Deck* myDeck) {
     myDeck->valid = valid;
 }
 
-// Parameters: file name of a deck file (e.g: "d1.deck"), struct Deck
-// return whether true if valid file and false otherwise
+// Parameters: name of deck file (e.g: "d1.deck"), struct Deck
+// return true iff valid deck file
 bool is_valid_deck_file(char* deck, Deck* myDeck) {
     FILE* deckFile = fopen(deck, "r");
     if (deckFile == NULL) {

@@ -17,7 +17,6 @@ typedef enum {
 } Error;
 
 Error handle_error_message(Error type);
-
 Error handle_player_errors(Error type);
 
 #endif

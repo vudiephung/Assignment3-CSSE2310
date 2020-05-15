@@ -85,6 +85,7 @@ SiteType get_site(Path* myPath, int position, const char* tempSites) {
 // Otherwise, set the capacity of each site if valid (0 < cap < 10).
 // However, for barriers: capacity = numberOfPlayers
 // If all of sites is valid, save all into struct Path
+// return void;
 void get_sites(Path* myPath, const char* tempSites, int numberOfPlayers) {
     int numberOfSites = myPath->numberOfSites;
     int* availableCapacity = malloc(sizeof(int) * numberOfSites);
@@ -134,6 +135,7 @@ void get_sites(Path* myPath, const char* tempSites, int numberOfPlayers) {
 // in handle_path(), read the given number in pathFile, then malloc with
 // appropriate sizes, loop through the path to read chars and save into
 // save it into myPath->rawPath. After that, run get_sites()
+// return void
 void handle_path(FILE* pathFile, Path* myPath, int numberOfPlayers) {
     int numberOfSites;
     int next;
@@ -171,6 +173,7 @@ void handle_path(FILE* pathFile, Path* myPath, int numberOfPlayers) {
 
 // Path is set up by handle_path() and its followings functions
 // which means myPath->valid is already set up, then return myPath->valid
+// return void
 bool is_valid_path(char* path, Path* myPath, int numberOfPlayers) {
     FILE* pathFile = fopen(path, "r");
     if (pathFile == NULL) {

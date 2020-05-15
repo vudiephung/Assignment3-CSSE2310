@@ -43,6 +43,7 @@ int find_max(int* array, int size, int* index) {
 }
 
 // Swap the value of 2 addresses on memory
+// return void;
 void swap(int* firstNumber, int* secondNumber) { 
     int temp = *firstNumber; 
     *firstNumber = *secondNumber; 

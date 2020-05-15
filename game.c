@@ -24,8 +24,9 @@ void sigchild_handler(int s) {
 
 // With this function, dealer can determines which player should go next
 // based on their current position (get from struct Participant)
-// and the number of sites (get from path)
+// and the number of sites (get from struct Path)
 // Then save the next turn (e.g: 0) into pa->nextTurn
+// return void;
 void calc_next_turn(Path* myPath, Participant* pa) {
     int numberOfSites = myPath->numberOfSites;
     int numberOfPlayer = pa->numberOfPlayers;
@@ -36,7 +37,7 @@ void calc_next_turn(Path* myPath, Participant* pa) {
     for (int site = 0; site < numberOfSites; site++) {
         // bottom to top
         for (int id = 0; id < numberOfPlayer; id++) {
-            // if the player is at bottom position
+            // if the player is at lowest position
             if (positions[id][0] == pa->sizes[site] - 1 &&
                     // site of that player is the current site
                     positions[id][1] == site) {
@@ -47,13 +48,15 @@ void calc_next_turn(Path* myPath, Participant* pa) {
     }
 }
 
-// Malloc most of variables of struct Participant with needed sizes
-// and set up default values. For example, at the beginning of the game, all
-// of the players at positions 0 with id from high to low; points and money of
-// players are 0 and 7 respectively, etc
+// Malloc most of variables of struct Participant with needed sizes and set up
+// their default values. For example, default positions for all players
+// at the beginning of the game is at the first site with id from high to low;
+// and default points and money are 0 and 7 respectively, etc
+// return void;
 void set_up(Path* myPath, Participant* pa) {
     const int defaultMoney = 7;
     int numberOfPlayers = pa->numberOfPlayers;
+    // These variables are explained in Participants.h
     int** positions = malloc(sizeof(int*) * numberOfPlayers);
     int** cards = malloc(sizeof(int*) * numberOfPlayers);
     int* moneys = malloc(sizeof(int) * numberOfPlayers);
@@ -101,7 +104,8 @@ void set_up(Path* myPath, Participant* pa) {
     pa->sizes = sizes;
 }
 
-// return true iff given playerId want to move to toPosition is valid
+// return true iff given playerId want to move to toPosition is
+// a valid destination
 bool is_valid_move(Path* myPath, Participant* pa,
         const int playerId, int toPosition) {
     int currentPosition = pa->positions[playerId][1];
@@ -115,14 +119,15 @@ bool is_valid_move(Path* myPath, Participant* pa,
 
 // This function is used for both dealer and player, based on given File* file
 // to handle with playerId move to which position
-// if dealer: file == stdout, dealer will check the type of the
-// next site (toPosition) and handle with it. (e.g: +3 money if next site is 
-// Mo)
+// If dealer: file == stdout, dealer will check the type of the
+// next site (toPosition) and handle with it.
+// (e.g: +3 money if next site is Mo)
 // If player: file == stderr, are allowed to update their V1 or V2 status
 // For dealer and players:
 // Increase and decrease the capacity of their old position and new position
 // respectively and display to the screen the output from dealer, sites and
-// new position after the move 
+// new position after the move.
+// Return void;
 void handle_move(FILE* file, Deck* myDeck, Path* myPath, Participant* pa,
         int playerId, const int toPosition) {
     int** positions = pa->positions;
@@ -170,7 +175,7 @@ void handle_move(FILE* file, Deck* myDeck, Path* myPath, Participant* pa,
     display_game(file, myPath, pa);
 }
 
-// Used for both dealer or player (stdout or stderr)
+// Used for both dealer or player: FILE* file is stdout or stderr
 // Display to the screen the sites (e.g: :: Mo Do Ri ::)
 // based on the sites and numberOfSites taken from struct Path
 void display_sites(FILE* file, Path* myPath) {
@@ -185,14 +190,18 @@ void display_sites(FILE* file, Path* myPath) {
     fflush(file);
 }
 
+// Used for both dealer or player: FILE* file is stdout or stderr
 // Based on the positions of players stored in pa->positions, displayer to the
 // screen with right orders
+// return void;
 void display_player_position(FILE* file, Path* myPath, Participant* pa) {
     int numberOfSites = myPath->numberOfSites;
     int numberOfPlayers = pa->numberOfPlayers;
     int** positions = pa->positions;
 
     int largestSize = find_max(pa->sizes, numberOfSites, NULL);
+    // Loop for the rows from 0 to largestSize to avoid to print the
+    // row which does not have any player in it
     for (int id = 0; id < largestSize; id++) {
         for (int site = 0; site < numberOfSites; site++) {
             bool found = false;
@@ -220,8 +229,11 @@ void display_player_position(FILE* file, Path* myPath, Participant* pa) {
             if (found) {
                 continue;
             }
+            // When does not found player at a position, print 3 spaces
+            // Otherwise, print playerId + spaces (at most 2)
             fprintf(file, "   ");
             fflush(stdout);
+            // End of line
             if (site == numberOfSites - 1) {
                 fprintf(file, "\n");
             }
@@ -230,6 +242,7 @@ void display_player_position(FILE* file, Path* myPath, Participant* pa) {
 }
 
 // Display output from dealer. e.g: Player 0 Money=7 V1=0 .....
+// return void;
 void display_dealer_output(FILE* file, Path* myPath, Participant* pa) {
     fprintf(file, "Player %d Money=%d V1=%d V2=%d Points=%d ",
             (pa->nextTurn), (pa->moneys)[pa->nextTurn],
@@ -249,6 +262,7 @@ void display_dealer_output(FILE* file, Path* myPath, Participant* pa) {
 }
 
 // display_game() includes display_sites() and display_player_position()
+// return void;
 void display_game(FILE* file, Path* myPath, Participant* pa) {
     display_sites(file, myPath);
     display_player_position(file, myPath, pa);
@@ -267,6 +281,7 @@ bool is_end_game(Path* myPath, Participant* pa) {
 
 // Calculate scores and then display the message to the screen
 // e.g: "Scores: 10,12\n"
+// return void;
 void calc_scores(FILE* file, Participant* pa) {
     int** cards = pa->cards;
     int* points = pa->points;
@@ -303,7 +318,7 @@ void calc_scores(FILE* file, Participant* pa) {
 }
 
 // Close the files and pipes that are left based on the id of the
-// players
+// players. Return void;
 void close_pipes_and_files(int id, int** pipesWrite, int** pipesRead,
         FILE** writeFile, FILE** readFile) {
     fclose(writeFile[id]);
@@ -319,6 +334,7 @@ void close_pipes_and_files(int id, int** pipesWrite, int** pipesRead,
 // After send to the pipes, close files and pipes of each players
 // kill and reap the "alive" players in case of the players are not exit
 // if early == true, exit dealer with Comms error
+// return void;
 void send_last_message(pid_t* childIds, int numberOfPlayers, 
         FILE** writeFile, FILE** readFile, int** pipesWrite, int** pipesRead,
         bool early) {
@@ -355,6 +371,7 @@ void send_last_message(pid_t* childIds, int numberOfPlayers,
 // READ_END of its pipesRead based on its id, then dup2() and execlp
 // with given char* currentPlayer (e.g: "./2310A"), char* playerCountStr
 // (e.g: "4") and its id as a string (e.g: "0")
+// return void;
 void handle_child(int id, char* currentPlayer, char* playersCountString,
         FILE** writeFile, FILE** readFile,
         int** pipesWrite, int** pipesRead) {
@@ -385,6 +402,7 @@ void handle_child(int id, char* currentPlayer, char* playersCountString,
 // each pipes, fdopen() and read caret '^' from player and
 // send the path char* rawPath to the pipes with given id in parameter
 // if it doesnt get the '^' character, exit with starting process error code
+// return void;
 void handle_parent(int id, char* rawPath, FILE** writeFile, FILE** readFile,
         int** pipesWrite, int** pipesRead) {
     close(pipesWrite[id][READ_END]);
@@ -409,6 +427,7 @@ void handle_parent(int id, char* rawPath, FILE** writeFile, FILE** readFile,
 // size of 2 int, fork() and save id of each childs in pid_t*
 // run handle_child() and handle_parent()
 // From argv, get "./2310A" for example and pass down to handle_child()
+// return void;
 void initial_game(int numberOfPlayers, FILE** writeFile, FILE** readFile,
         int** pipesWrite, int** pipesRead, pid_t* childIds, char* rawPath,
         char** argv) {
@@ -446,7 +465,8 @@ void initial_game(int numberOfPlayers, FILE** writeFile, FILE** readFile,
 // which player should go next. To avoid SIGPIPE, check whether that player
 // is alive or not before sending "YT", read "DO", exit if comms error with
 // that player require invalid move. Otherwisem handle_move() and send "HAP"
-// to all players 
+// to all players .
+// return void;
 void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
         FILE** writeFile, FILE** readFile,
         int** pipesWrite, int** pipesRead) {
@@ -496,6 +516,7 @@ void communicate(Deck* myDeck, Path* myPath, Participant* pa, pid_t* childIds,
 
 // set up sigaction of SIGCHILD, set up variables and runs the game
 // When the game is over, send "DONE" to all players
+// return void;
 void run_game(Deck* myDeck, Path* myPath, Participant* pa, char** argv) {
     struct sigaction sigchildAction;
     sigchildAction.sa_handler = sigchild_handler;

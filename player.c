@@ -13,6 +13,7 @@
 // If argv[1] is valid, save it into pa->numberOfPlayers
 // 3. Do the same thing for argv[2] and save into p->playerId if valid
 // 4. read the path, if not valid, exit with error code of invalid path
+// return void;
 void errros_handler(int argc, char** argv, Path* myPath,
         Participant* pa, Player* p) {
     if (argc != 3) {
@@ -39,7 +40,7 @@ void errros_handler(int argc, char** argv, Path* myPath,
 
 // Helper function of most_cards_owner() to find one player who has most of
 // the cards, return -1 iff there are at least 2 players have the same highest
-// number of cards
+// number of cards. Otherwise, return playerId who is most cards owner
 int find_index_of_max(int* array, int size) {
     int max = array[0];
     int index = 0;
@@ -278,6 +279,7 @@ bool handle_hap(char* buffer, Path* myPath, Player* p, Participant* pa) {
 // In this function, display the sites and positions of player
 // Continuously get input from stdin and handle with it
 // Print the score of the game if get "DONE" from stdin
+// return void;
 void handle_input(Path* myPath, Player* p, Participant* pa, char playerType) {
     int defaultBufferSize = 20;
     char* buffer = malloc(sizeof(char) * defaultBufferSize);

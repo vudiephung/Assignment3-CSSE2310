@@ -29,9 +29,9 @@ int main(int argc, char** argv) {
     Deck* myDeck = malloc(sizeof(Deck) * 1);
     Path* myPath = malloc(sizeof(Path) * 1);
     Participant* p = malloc(sizeof(Participant) * 1);
-    const int numberOfPlayers = argc - 3;
-    p->numberOfPlayers = numberOfPlayers;   // 3 is number of agrs that
+    const int numberOfPlayers = argc - 3;   // 3 is number of agrs that
                                             // are not player
+    p->numberOfPlayers = numberOfPlayers;
 
     if (!(is_valid_deck_file(argv[1], myDeck))) {
         return handle_error_message(DECK);
